@@ -1,45 +1,35 @@
 /* ============================================================
-storage.js — Capa única de persistencia
+storage.js — Persistencia local + sincronización con Supabase
 
 DATOS ESTRUCTURADOS:
-Se guardan en Supabase:
+
+* Se mantienen en LocalStorage para que la aplicación actual
+  siga funcionando sin cambios.
+* Se sincronizan automáticamente con Supabase.
+
+MULTIMEDIA:
+
+* Se mantiene en IndexedDB.
+
+TABLA SUPABASE:
 user_storage
 
-ARCHIVOS MULTIMEDIA:
-Se guardan localmente en IndexedDB.
+Columnas necesarias:
 
-IMPORTANTE:
-lsGet, lsSet y lsRemove son ahora ASÍNCRONAS.
-Deben utilizarse con await.
-
-Ejemplo:
-
-const datos = await lsGet("notas", []);
-
-await lsSet("notas", datos);
-
-await lsRemove("notas");
+* id
+* user_id
+* storage_key
+* data
+* updated_at
 
 ============================================================ */
 
 // ============================================================
-// SUPABASE
-// ============================================================
-
-const supabaseClient =
-window.supabaseClient;
-
-if (!supabaseClient) {
-
-console.error(
-"storage.js: Supabase no está conectado"
-);
-
-}
-
-// ============================================================
 // CONFIGURACIÓN
 // ============================================================
+
+const LS_PREFIX =
+"album_";
 
 const SESSION_KEY =
 "loggedUser";
@@ -55,6 +45,13 @@ const IDB_VERSION =
 
 let dbPromise =
 null;
+
+// ============================================================
+// SUPABASE
+// ============================================================
+
+const supabaseClient =
+window.supabaseClient;
 
 // ============================================================
 // OBTENER USUARIO ACTUAL
@@ -103,7 +100,7 @@ catch (error) {
 
 ```
 console.error(
-  "storage.js: error leyendo sesión",
+  "Error leyendo usuario actual:",
   error
 );
 
@@ -131,106 +128,15 @@ return user
 }
 
 // ============================================================
-// SUPABASE STORAGE
+// SINCRONIZAR CON SUPABASE
+// ============================================================
+//
+// Esta función se ejecuta en segundo plano.
+// No bloquea la aplicación.
+//
 // ============================================================
 
-// ------------------------------------------------------------
-// OBTENER DATO
-// ------------------------------------------------------------
-
-export async function lsGet(
-key,
-fallback = null
-) {
-
-try {
-
-```
-const userId =
-  getCurrentUserId();
-
-
-if (!userId) {
-
-  console.warn(
-    "lsGet: no hay usuario conectado"
-  );
-
-
-  return fallback;
-
-}
-
-
-const {
-  data,
-  error
-} =
-  await supabaseClient
-    .from(
-      "user_storage"
-    )
-    .select(
-      "data"
-    )
-    .eq(
-      "user_id",
-      userId
-    )
-    .eq(
-      "storage_key",
-      key
-    )
-    .maybeSingle();
-
-
-if (error) {
-
-  console.error(
-    "storage.lsGet error:",
-    error
-  );
-
-
-  return fallback;
-
-}
-
-
-if (!data) {
-
-  return fallback;
-
-}
-
-
-return data.data;
-```
-
-}
-
-catch (error) {
-
-```
-console.error(
-  "storage.lsGet error:",
-  key,
-  error
-);
-
-
-return fallback;
-```
-
-}
-
-}
-
-// ------------------------------------------------------------
-// GUARDAR DATO
-// ------------------------------------------------------------
-
-export async function lsSet(
+async function syncToSupabase(
 key,
 value
 ) {
@@ -238,6 +144,18 @@ value
 try {
 
 ```
+if (!supabaseClient) {
+
+  console.warn(
+    "Supabase no está conectado"
+  );
+
+
+  return false;
+
+}
+
+
 const userId =
   getCurrentUserId();
 
@@ -245,7 +163,7 @@ const userId =
 if (!userId) {
 
   console.warn(
-    "lsSet: no hay usuario conectado"
+    "No hay usuario conectado"
   );
 
 
@@ -293,7 +211,7 @@ const {
 if (error) {
 
   console.error(
-    "storage.lsSet error:",
+    "Error sincronizando con Supabase:",
     error
   );
 
@@ -301,6 +219,12 @@ if (error) {
   return false;
 
 }
+
+
+console.log(
+  "Datos sincronizados:",
+  key
+);
 
 
 return true;
@@ -312,8 +236,7 @@ catch (error) {
 
 ```
 console.error(
-  "storage.lsSet error:",
-  key,
+  "Error de sincronización:",
   error
 );
 
@@ -325,102 +248,34 @@ return false;
 
 }
 
-// ------------------------------------------------------------
-// ELIMINAR DATO
-// ------------------------------------------------------------
+// ============================================================
+// CARGAR DATOS DESDE SUPABASE
+// ============================================================
+//
+// Se utiliza cuando el usuario inicia sesión.
+// Los datos descargados reemplazan la copia local.
+//
+// ============================================================
 
-export async function lsRemove(
-key
-) {
+export async function syncFromSupabase() {
 
 try {
 
 ```
-const userId =
-  getCurrentUserId();
-
-
-if (!userId) {
-
-  console.warn(
-    "lsRemove: no hay usuario conectado"
-  );
-
+if (!supabaseClient) {
 
   return false;
 
 }
 
 
-const {
-  error
-} =
-  await supabaseClient
-    .from(
-      "user_storage"
-    )
-    .delete()
-    .eq(
-      "user_id",
-      userId
-    )
-    .eq(
-      "storage_key",
-      key
-    );
-
-
-if (error) {
-
-  console.error(
-    "storage.lsRemove error:",
-    error
-  );
-
-
-  return false;
-
-}
-
-
-return true;
-```
-
-}
-
-catch (error) {
-
-```
-console.error(
-  "storage.lsRemove error:",
-  key,
-  error
-);
-
-
-return false;
-```
-
-}
-
-}
-
-// ------------------------------------------------------------
-// OBTENER TODOS LOS DATOS DEL USUARIO
-// ------------------------------------------------------------
-
-export async function lsAllKeysRaw() {
-
-try {
-
-```
 const userId =
   getCurrentUserId();
 
 
 if (!userId) {
 
-  return {};
+  return false;
 
 }
 
@@ -445,18 +300,14 @@ const {
 if (error) {
 
   console.error(
-    "storage.lsAllKeysRaw error:",
+    "Error cargando datos desde Supabase:",
     error
   );
 
 
-  return {};
+  return false;
 
 }
-
-
-const output =
-  {};
 
 
 for (
@@ -464,17 +315,26 @@ for (
   of data || []
 ) {
 
-  output[
-    item.storage_key
-  ] =
+  localStorage.setItem(
+
+    LS_PREFIX +
+      item.storage_key,
+
     JSON.stringify(
       item.data
-    );
+    )
+
+  );
 
 }
 
 
-return output;
+console.log(
+  "Datos del usuario cargados desde Supabase"
+);
+
+
+return true;
 ```
 
 }
@@ -483,12 +343,12 @@ catch (error) {
 
 ```
 console.error(
-  "storage.lsAllKeysRaw error:",
+  "Error sincronizando datos:",
   error
 );
 
 
-return {};
+return false;
 ```
 
 }
@@ -496,7 +356,250 @@ return {};
 }
 
 // ============================================================
-// INDEXEDDB — ARCHIVOS MULTIMEDIA
+// LOCALSTORAGE + SUPABASE
+// ============================================================
+
+// ---------------- OBTENER ----------------
+
+export function lsGet(
+key,
+fallback = null
+) {
+
+try {
+
+```
+const raw =
+  localStorage.getItem(
+    LS_PREFIX +
+      key
+  );
+
+
+if (
+  raw === null
+) {
+
+  return fallback;
+
+}
+
+
+return JSON.parse(
+  raw
+);
+```
+
+}
+
+catch (error) {
+
+```
+console.error(
+  "storage.lsGet error:",
+  key,
+  error
+);
+
+
+return fallback;
+```
+
+}
+
+}
+
+// ---------------- GUARDAR ----------------
+
+export function lsSet(
+key,
+value
+) {
+
+try {
+
+```
+localStorage.setItem(
+
+  LS_PREFIX +
+    key,
+
+  JSON.stringify(
+    value
+  )
+
+);
+
+
+// Sincroniza sin bloquear
+syncToSupabase(
+  key,
+  value
+);
+
+
+return true;
+```
+
+}
+
+catch (error) {
+
+```
+console.error(
+  "storage.lsSet error:",
+  key,
+  error
+);
+
+
+return false;
+```
+
+}
+
+}
+
+// ---------------- ELIMINAR ----------------
+
+export function lsRemove(
+key
+) {
+
+try {
+
+```
+localStorage.removeItem(
+
+  LS_PREFIX +
+    key
+
+);
+
+
+const userId =
+  getCurrentUserId();
+
+
+if (
+  supabaseClient &&
+  userId
+) {
+
+  supabaseClient
+
+    .from(
+      "user_storage"
+    )
+
+    .delete()
+
+    .eq(
+      "user_id",
+      userId
+    )
+
+    .eq(
+      "storage_key",
+      key
+    )
+
+    .then(
+
+      function ({
+        error
+      }) {
+
+        if (error) {
+
+          console.error(
+            "Error eliminando dato de Supabase:",
+            error
+          );
+
+        }
+
+      }
+
+    );
+
+}
+```
+
+}
+
+catch (error) {
+
+```
+console.error(
+  "storage.lsRemove error:",
+  key,
+  error
+);
+```
+
+}
+
+}
+
+// ============================================================
+// TODAS LAS CLAVES LOCALES
+// ============================================================
+
+export function lsAllKeysRaw() {
+
+const output =
+{};
+
+for (
+let i = 0;
+
+```
+i <
+localStorage.length;
+
+i++
+```
+
+) {
+
+```
+const key =
+  localStorage.key(
+    i
+  );
+
+
+if (
+
+  key &&
+
+  key.startsWith(
+    LS_PREFIX
+  )
+
+) {
+
+  output[
+    key.slice(
+      LS_PREFIX.length
+    )
+  ] =
+    localStorage.getItem(
+      key
+    );
+
+}
+```
+
+}
+
+return output;
+
+}
+
+// ============================================================
+// INDEXEDDB
 // ============================================================
 
 function openDB() {
@@ -520,8 +623,11 @@ new Promise(
 
     const request =
       indexedDB.open(
+
         IDB_NAME,
+
         IDB_VERSION
+
       );
 
 
@@ -533,9 +639,11 @@ new Promise(
 
 
         if (
+
           !db.objectStoreNames.contains(
             IDB_STORE
           )
+
         ) {
 
           db.createObjectStore(
@@ -583,7 +691,7 @@ return dbPromise;
 }
 
 // ============================================================
-// GENERAR ID DE ARCHIVO
+// GENERAR ID
 // ============================================================
 
 export function genId() {
@@ -628,8 +736,11 @@ function (
 
   const tx =
     db.transaction(
+
       IDB_STORE,
+
       "readwrite"
+
     );
 
 
@@ -687,8 +798,11 @@ function (
 
   const tx =
     db.transaction(
+
       IDB_STORE,
+
       "readonly"
+
     );
 
 
@@ -748,8 +862,11 @@ function (
 
   const tx =
     db.transaction(
+
       IDB_STORE,
+
       "readwrite"
+
     );
 
 
@@ -805,8 +922,11 @@ function (
 
   const tx =
     db.transaction(
+
       IDB_STORE,
+
       "readonly"
+
     );
 
 
@@ -844,7 +964,7 @@ function (
 }
 
 // ============================================================
-// BORRAR TODOS LOS ARCHIVOS
+// BORRAR ARCHIVOS
 // ============================================================
 
 export async function idbClear() {
@@ -862,8 +982,11 @@ function (
 
   const tx =
     db.transaction(
+
       IDB_STORE,
+
       "readwrite"
+
     );
 
 
@@ -899,7 +1022,7 @@ function (
 }
 
 // ============================================================
-// FILE/BLOB → BASE64
+// FILE → BASE64
 // ============================================================
 
 export function fileToBase64(
@@ -914,12 +1037,16 @@ function (
   reject
 ) {
 
-  if (!file) {
+  if (
+    !file
+  ) {
 
     reject(
+
       new Error(
         "Archivo vacío"
       )
+
     );
 
 
@@ -964,7 +1091,7 @@ function (
 }
 
 // ============================================================
-// GUARDAR ARCHIVO MULTIMEDIA
+// GUARDAR MULTIMEDIA
 // ============================================================
 
 export async function saveMediaFile(
@@ -977,36 +1104,27 @@ await fileToBase64(
 file
 );
 
-const id =
-genId();
-
 const record = {
 
 ```
 id:
-
-  id,
+  genId(),
 
 kind:
-
   meta.kind ||
   "photo",
 
 mime:
-
   file.type,
 
 name:
-
   file.name ||
   "",
 
 data:
-
   base64,
 
 createdAt:
-
   Date.now(),
 
 ...meta
