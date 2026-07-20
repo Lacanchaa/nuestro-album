@@ -4,39 +4,75 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#C1798A">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+
+>
+
+<meta
+name="theme-color"
+content="#C1798A"
+
+>
 
   <title>Nuestro Álbum</title>
 
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link
+    rel="icon"
+    href="favicon.ico"
+    type="image/x-icon"
+  >
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
 
-  <link rel="stylesheet" href="css/reset.css">
-  <link rel="stylesheet" href="css/themes.css">
-  <link rel="stylesheet" href="css/main.css">
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
 
-  <!-- Tema inicial -->
+  <link
+    rel="stylesheet"
+    href="./css/reset.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="./css/themes.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="./css/main.css"
+  >
+
+  <!-- Aplicar tema guardado antes de mostrar la aplicación -->
 
   <script>
     (function () {
       try {
         const raw = localStorage.getItem('album_settings');
 
-        if (raw) {
-          const settings = JSON.parse(raw);
+        if (!raw) return;
 
-          if (settings && settings.theme) {
-            document.documentElement.setAttribute(
-              'data-theme',
-              settings.theme
-            );
-          }
+        const settings = JSON.parse(raw);
+
+        if (settings && settings.theme) {
+          document.documentElement.setAttribute(
+            'data-theme',
+            settings.theme
+          );
         }
       } catch (error) {
-        console.warn('No se pudo cargar el tema guardado');
+        console.warn(
+          'No se pudo cargar el tema guardado:',
+          error
+        );
       }
     })();
   </script>
@@ -45,12 +81,21 @@
 
 <body>
 
-  <!-- ===================== CARGA ===================== -->
+  <!-- =========================================================
+       PANTALLA DE CARGA
+  ========================================================== -->
 
-  <div id="screen-loading" class="screen screen-loading">
-    <div class="thread-mark" aria-hidden="true"></div>
+  <div
+    id="screen-loading"
+    class="screen screen-loading"
+  >
 
 ```
+<div
+  class="thread-mark"
+  aria-hidden="true"
+></div>
+
 <p data-i18n="loading">
   Preparando vuestros recuerdos…
 </p>
@@ -58,122 +103,47 @@
 
   </div>
 
-  <!-- ===================== AUTENTICACIÓN ===================== -->
+  <!-- =========================================================
+       AUTENTICACIÓN
+  ========================================================== -->
 
-  <div id="screen-auth" class="screen screen-auth hidden">
+  <div
+    id="screen-auth"
+    class="screen screen-auth hidden"
+  >
 
 ```
 <div class="auth-card">
 
-  <div class="auth-mark" aria-hidden="true">
+  <div
+    class="auth-mark"
+    aria-hidden="true"
+  >
     ✦
   </div>
 
   <h1
     class="auth-title"
     id="auth-welcome"
-    data-i18n="welcomeTitle">
+    data-i18n="welcomeTitle"
+  >
     Bienvenidos de nuevo
   </h1>
 
-  <p class="auth-sub" data-i18n="welcomeSub">
+  <p
+    class="auth-sub"
+    data-i18n="welcomeSub"
+  >
     Vuestra historia os espera
   </p>
 
 
   <!-- LOGIN -->
 
-  <form id="form-login" class="auth-form">
-
-    <label class="field">
-      <span data-i18n="username">Usuario</span>
-
-      <input
-        type="text"
-        id="login-username"
-        autocomplete="username"
-        required>
-    </label>
-
-
-    <label class="field">
-      <span data-i18n="password">Contraseña</span>
-
-      <input
-        type="password"
-        id="login-password"
-        autocomplete="current-password"
-        required>
-    </label>
-
-
-    <label class="checkbox-field">
-
-      <input
-        type="checkbox"
-        id="login-remember"
-        checked>
-
-      <span data-i18n="staySignedIn">
-        Mantener sesión iniciada
-      </span>
-
-    </label>
-
-
-    <p
-      class="auth-error"
-      id="login-error">
-    </p>
-
-
-    <button
-      type="submit"
-      class="btn btn-primary"
-      data-i18n="signIn">
-      Entrar
-    </button>
-
-
-    <div class="auth-links">
-
-      <button
-        type="button"
-        class="link-btn"
-        data-goto="register"
-        data-i18n="createAccount">
-        Crear cuenta
-      </button>
-
-      <button
-        type="button"
-        class="link-btn"
-        data-goto="recover"
-        data-i18n="forgotPassword">
-        Olvidé mi contraseña
-      </button>
-
-    </div>
-
-  </form>
-
-
-  <!-- REGISTRO -->
-
-  <form id="form-register" class="auth-form hidden">
-
-    <label class="field">
-      <span data-i18n="displayName">
-        Vuestro nombre / apodo
-      </span>
-
-      <input
-        type="text"
-        id="reg-displayname"
-        required
-        maxlength="60">
-    </label>
-
+  <form
+    id="form-login"
+    class="auth-form"
+  >
 
     <label class="field">
       <span data-i18n="username">
@@ -182,11 +152,10 @@
 
       <input
         type="text"
-        id="reg-username"
+        id="login-username"
         autocomplete="username"
         required
-        minlength="3"
-        maxlength="30">
+      >
     </label>
 
 
@@ -197,14 +166,128 @@
 
       <input
         type="password"
-        id="reg-password"
-        autocomplete="new-password"
+        id="login-password"
+        autocomplete="current-password"
         required
-        minlength="6">
+      >
+    </label>
+
+
+    <label class="checkbox-field">
+
+      <input
+        type="checkbox"
+        id="login-remember"
+        checked
+      >
+
+      <span data-i18n="staySignedIn">
+        Mantener sesión iniciada
+      </span>
+
+    </label>
+
+
+    <p
+      class="auth-error"
+      id="login-error"
+    ></p>
+
+
+    <button
+      type="submit"
+      class="btn btn-primary"
+      data-i18n="signIn"
+    >
+      Entrar
+    </button>
+
+
+    <div class="auth-links">
+
+      <button
+        type="button"
+        class="link-btn"
+        data-goto="register"
+        data-i18n="createAccount"
+      >
+        Crear cuenta
+      </button>
+
+      <button
+        type="button"
+        class="link-btn"
+        data-goto="recover"
+        data-i18n="forgotPassword"
+      >
+        Olvidé mi contraseña
+      </button>
+
+    </div>
+
+  </form>
+
+
+  <!-- REGISTRO -->
+
+  <form
+    id="form-register"
+    class="auth-form hidden"
+  >
+
+    <label class="field">
+
+      <span data-i18n="displayName">
+        Vuestro nombre / apodo
+      </span>
+
+      <input
+        type="text"
+        id="reg-displayname"
+        required
+        maxlength="60"
+      >
+
     </label>
 
 
     <label class="field">
+
+      <span data-i18n="username">
+        Usuario
+      </span>
+
+      <input
+        type="text"
+        id="reg-username"
+        autocomplete="username"
+        required
+        minlength="3"
+        maxlength="30"
+      >
+
+    </label>
+
+
+    <label class="field">
+
+      <span data-i18n="password">
+        Contraseña
+      </span>
+
+      <input
+        type="password"
+        id="reg-password"
+        autocomplete="new-password"
+        required
+        minlength="6"
+      >
+
+    </label>
+
+
+    <label class="field">
+
       <span data-i18n="confirmPassword">
         Confirmar contraseña
       </span>
@@ -214,11 +297,14 @@
         id="reg-password2"
         autocomplete="new-password"
         required
-        minlength="6">
+        minlength="6"
+      >
+
     </label>
 
 
     <label class="field">
+
       <span data-i18n="securityQuestion">
         Pregunta de seguridad
       </span>
@@ -227,11 +313,14 @@
         type="text"
         id="reg-secquestion"
         required
-        placeholder="¿Dónde fue vuestra primera cita?">
+        placeholder="¿Dónde fue vuestra primera cita?"
+      >
+
     </label>
 
 
     <label class="field">
+
       <span data-i18n="securityAnswer">
         Respuesta
       </span>
@@ -239,20 +328,23 @@
       <input
         type="text"
         id="reg-secanswer"
-        required>
+        required
+      >
+
     </label>
 
 
     <p
       class="auth-error"
-      id="register-error">
-    </p>
+      id="register-error"
+    ></p>
 
 
     <button
       type="submit"
       class="btn btn-primary"
-      data-i18n="createAccount">
+      data-i18n="createAccount"
+    >
       Crear cuenta
     </button>
 
@@ -263,7 +355,8 @@
         type="button"
         class="link-btn"
         data-goto="login"
-        data-i18n="backToLogin">
+        data-i18n="backToLogin"
+      >
         Volver a entrar
       </button>
 
@@ -274,7 +367,10 @@
 
   <!-- RECUPERACIÓN -->
 
-  <form id="form-recover" class="auth-form hidden">
+  <form
+    id="form-recover"
+    class="auth-form hidden"
+  >
 
     <label class="field">
 
@@ -285,12 +381,16 @@
       <input
         type="text"
         id="rec-username"
-        required>
+        required
+      >
 
     </label>
 
 
-    <div id="rec-step2" class="hidden">
+    <div
+      id="rec-step2"
+      class="hidden"
+    >
 
       <label class="field">
 
@@ -301,7 +401,8 @@
         <input
           type="text"
           id="rec-answer"
-          required>
+          required
+        >
 
       </label>
 
@@ -315,7 +416,9 @@
         <input
           type="password"
           id="rec-newpass"
-          minlength="6">
+          minlength="6"
+          required
+        >
 
       </label>
 
@@ -324,21 +427,22 @@
 
     <p
       class="auth-error"
-      id="recover-error">
-    </p>
+      id="recover-error"
+    ></p>
 
 
     <p
       class="auth-ok"
-      id="recover-ok">
-    </p>
+      id="recover-ok"
+    ></p>
 
 
     <button
       type="button"
       id="rec-step1-btn"
       class="btn btn-primary"
-      data-i18n="continueBtn">
+      data-i18n="continueBtn"
+    >
       Continuar
     </button>
 
@@ -347,7 +451,8 @@
       type="button"
       id="rec-step2-btn"
       class="btn btn-primary hidden"
-      data-i18n="resetPassword">
+      data-i18n="resetPassword"
+    >
       Restablecer contraseña
     </button>
 
@@ -358,7 +463,8 @@
         type="button"
         class="link-btn"
         data-goto="login"
-        data-i18n="backToLogin">
+        data-i18n="backToLogin"
+      >
         Volver a entrar
       </button>
 
@@ -371,27 +477,46 @@
 
   </div>
 
-  <!-- ===================== BLOQUEO ===================== -->
+  <!-- =========================================================
+       PANTALLA DE BLOQUEO
+  ========================================================== -->
 
-  <div id="screen-lock" class="screen screen-lock hidden">
+  <div
+    id="screen-lock"
+    class="screen screen-lock hidden"
+  >
 
 ```
 <div class="auth-card">
 
-  <div class="auth-mark" aria-hidden="true">
+  <div
+    class="auth-mark"
+    aria-hidden="true"
+  >
     🔒
   </div>
 
-  <h1 class="auth-title" data-i18n="lockedTitle">
+
+  <h1
+    class="auth-title"
+    data-i18n="lockedTitle"
+  >
     Sesión bloqueada
   </h1>
 
-  <p class="auth-sub" data-i18n="lockedSub">
+
+  <p
+    class="auth-sub"
+    data-i18n="lockedSub"
+  >
     Introduce tu contraseña para continuar
   </p>
 
 
-  <form id="form-unlock" class="auth-form">
+  <form
+    id="form-unlock"
+    class="auth-form"
+  >
 
     <label class="field">
 
@@ -403,21 +528,23 @@
         type="password"
         id="unlock-password"
         required
-        autocomplete="current-password">
+        autocomplete="current-password"
+      >
 
     </label>
 
 
     <p
       class="auth-error"
-      id="unlock-error">
-    </p>
+      id="unlock-error"
+    ></p>
 
 
     <button
       type="submit"
       class="btn btn-primary"
-      data-i18n="unlock">
+      data-i18n="unlock"
+    >
       Desbloquear
     </button>
 
@@ -428,12 +555,20 @@
 
   </div>
 
-  <!-- ===================== APLICACIÓN ===================== -->
+  <!-- =========================================================
+       APLICACIÓN PRINCIPAL
+  ========================================================== -->
 
-  <div id="screen-app" class="screen screen-app hidden">
+  <div
+    id="screen-app"
+    class="screen screen-app hidden"
+  >
 
 ```
-<aside class="sidebar" id="sidebar">
+<aside
+  class="sidebar"
+  id="sidebar"
+>
 
   <div class="brand">
 
@@ -443,103 +578,93 @@
 
     <span
       class="brand-name"
-      id="brand-couple-name">
+      id="brand-couple-name"
+    >
       Nuestro Álbum
     </span>
 
   </div>
 
 
-  <nav class="nav" id="main-nav">
+  <nav
+    class="nav"
+    id="main-nav"
+  >
 
     <button
       class="nav-item active"
-      data-view="dashboard">
-
+      data-view="dashboard"
+    >
       <span class="nav-ic">⌂</span>
-
       <span data-i18n="navDashboard">
         Inicio
       </span>
-
     </button>
 
 
     <button
       class="nav-item"
-      data-view="calendar">
-
+      data-view="calendar"
+    >
       <span class="nav-ic">▦</span>
-
       <span data-i18n="navCalendar">
         Calendario
       </span>
-
     </button>
 
 
     <button
       class="nav-item"
-      data-view="timeline">
-
+      data-view="timeline"
+    >
       <span class="nav-ic">〜</span>
-
       <span data-i18n="navTimeline">
         Nuestra Historia
       </span>
-
     </button>
 
 
     <button
       class="nav-item"
-      data-view="events">
-
+      data-view="events"
+    >
       <span class="nav-ic">✧</span>
-
       <span data-i18n="navEvents">
         Eventos
       </span>
-
     </button>
 
 
     <button
       class="nav-item"
-      data-view="notes">
-
+      data-view="notes"
+    >
       <span class="nav-ic">✎</span>
-
       <span data-i18n="navNotes">
         Notas
       </span>
-
     </button>
 
 
     <button
       class="nav-item"
-      data-view="gallery">
-
+      data-view="gallery"
+    >
       <span class="nav-ic">▣</span>
-
       <span data-i18n="navGallery">
         Galería
       </span>
-
     </button>
 
 
     <button
       class="nav-item"
-      data-view="settings">
-
+      data-view="settings"
+    >
       <span class="nav-ic">⚙</span>
-
       <span data-i18n="navSettings">
         Ajustes
       </span>
-
     </button>
 
   </nav>
@@ -548,7 +673,8 @@
   <button
     class="btn btn-ghost logout-btn"
     id="btn-logout"
-    data-i18n="signOut">
+    data-i18n="signOut"
+  >
     Cerrar sesión
   </button>
 
@@ -557,18 +683,22 @@
 
 <div
   class="sidebar-backdrop"
-  id="sidebar-backdrop">
-</div>
+  id="sidebar-backdrop"
+></div>
 
 
-<main class="content" id="content">
+<main
+  class="content"
+  id="content"
+>
 
   <header class="topbar">
 
     <button
       class="hamburger"
       id="btn-hamburger"
-      aria-label="Menú">
+      aria-label="Menú"
+    >
       ☰
     </button>
 
@@ -576,7 +706,8 @@
     <h2
       class="view-title"
       id="view-title"
-      data-i18n="navDashboard">
+      data-i18n="navDashboard"
+    >
       Inicio
     </h2>
 
@@ -586,23 +717,19 @@
       <select
         id="lang-switch"
         class="lang-switch"
-        aria-label="Idioma">
-
-        <option value="es">
-          ES
-        </option>
-
-        <option value="en">
-          EN
-        </option>
-
+        aria-label="Idioma"
+      >
+        <option value="es">ES</option>
+        <option value="en">EN</option>
       </select>
 
 
       <button
         class="icon-btn"
         id="btn-anim-toggle"
-        title="Animaciones">
+        title="Animaciones"
+        type="button"
+      >
         ✨
       </button>
 
@@ -613,60 +740,65 @@
 
   <section
     id="view-dashboard"
-    class="view active">
-  </section>
+    class="view active"
+  ></section>
 
 
   <section
     id="view-calendar"
-    class="view">
-  </section>
+    class="view"
+  ></section>
 
 
   <section
     id="view-timeline"
-    class="view">
-  </section>
+    class="view"
+  ></section>
 
 
   <section
     id="view-events"
-    class="view">
-  </section>
+    class="view"
+  ></section>
 
 
   <section
     id="view-notes"
-    class="view">
-  </section>
+    class="view"
+  ></section>
 
 
   <section
     id="view-gallery"
-    class="view">
-  </section>
+    class="view"
+  ></section>
 
 
   <section
     id="view-settings"
-    class="view">
-  </section>
+    class="view"
+  ></section>
 
 </main>
 ```
 
   </div>
 
-  <!-- ===================== REPRODUCTOR ===================== -->
+  <!-- =========================================================
+       REPRODUCTOR DE MÚSICA
+  ========================================================== -->
 
   <div
     id="music-player"
-    class="music-player hidden">
+    class="music-player hidden"
+  >
 
 ```
 <button
   id="mp-toggle"
-  class="mp-toggle">
+  class="mp-toggle"
+  type="button"
+>
   ▶
 </button>
 
@@ -676,7 +808,8 @@
   <span
     id="mp-track-name"
     class="mp-track-name"
-    data-i18n="noTrack">
+    data-i18n="noTrack"
+  >
     Sin música
   </span>
 
@@ -687,7 +820,8 @@
     min="0"
     max="100"
     value="0"
-    class="mp-seek">
+    class="mp-seek"
+  >
 
 </div>
 
@@ -695,7 +829,9 @@
 <button
   id="mp-shuffle"
   class="icon-btn small"
-  title="Aleatorio">
+  title="Aleatorio"
+  type="button"
+>
   ⤨
 </button>
 
@@ -703,7 +839,9 @@
 <button
   id="mp-repeat"
   class="icon-btn small"
-  title="Repetir">
+  title="Repetir"
+  type="button"
+>
   ↻
 </button>
 
@@ -715,54 +853,75 @@
   max="1"
   step="0.01"
   value="0.7"
-  class="mp-volume">
+  class="mp-volume"
+>
 
 
 <button
   id="mp-list"
   class="icon-btn small"
-  title="Playlist">
+  title="Playlist"
+  type="button"
+>
   ♫
 </button>
 
 
-<audio id="mp-audio"></audio>
+<audio
+  id="mp-audio"
+  preload="metadata"
+></audio>
 ```
 
   </div>
 
-  <!-- ===================== EFECTOS ===================== -->
+  <!-- =========================================================
+       ANIMACIONES
+  ========================================================== -->
 
 <canvas
- id="fx-canvas"
- class="fx-canvas hidden"> </canvas>
+id="fx-canvas"
+class="fx-canvas hidden"
 
-  <!-- ===================== MODALES ===================== -->
+> </canvas>
+
+  <!-- =========================================================
+       MODALES Y TOASTS
+  ========================================================== -->
 
   <div id="modal-root"></div>
 
-  <!-- ===================== TOASTS ===================== -->
+  <div
+    id="toast-root"
+    class="toast-root"
+  ></div>
 
-  <div id="toast-root" class="toast-root"></div>
+  <!-- =========================================================
+       JAVASCRIPT
+  ========================================================== -->
 
-  <!-- ===================== SUPABASE ===================== -->
+  <!-- Supabase debe cargarse primero -->
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
 
-  <script src="./js/supabase-config.js"></script>
+  <!-- Este archivo debe existir exactamente aquí:
+       /nuestro-album/js/supabase-config.js -->
 
-  <!-- ===================== APLICACIÓN ===================== -->
+  <script
+    src="./js/supabase-config.js"
+  ></script>
 
-  <!--
-    IMPORTANTE:
-    app.js importa auth.js, music.js, data.js, etc.
-    Por eso NO debes cargar auth.js por separado.
-  -->
+  <!-- IMPORTANTE:
+       app.js es un módulo.
+       app.js importa auth.js, music.js, data.js, etc.
+       NO cargar auth.js aparte. -->
 
   <script
     type="module"
-    src="./js/app.js">
-  </script>
+    src="./js/app.js"
+  ></script>
 
 </body>
 
