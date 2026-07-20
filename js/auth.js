@@ -12,10 +12,9 @@ console.log("Supabase conectado correctamente");
 
 function generateSalt() {
 const array = new Uint8Array(16);
-
-```
 crypto.getRandomValues(array);
 
+```
 return Array.from(array)
   .map(function (byte) {
     return byte.toString(16).padStart(2, "0");
@@ -29,28 +28,26 @@ async function hashValue(value, salt) {
 const encoder = new TextEncoder();
 
 ```
-const keyMaterial =
-  await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(value),
-    {
-      name: "PBKDF2"
-    },
-    false,
-    ["deriveBits"]
-  );
+const keyMaterial = await crypto.subtle.importKey(
+  "raw",
+  encoder.encode(value),
+  {
+    name: "PBKDF2"
+  },
+  false,
+  ["deriveBits"]
+);
 
-const hash =
-  await crypto.subtle.deriveBits(
-    {
-      name: "PBKDF2",
-      salt: encoder.encode(salt),
-      iterations: 100000,
-      hash: "SHA-256"
-    },
-    keyMaterial,
-    256
-  );
+const hash = await crypto.subtle.deriveBits(
+  {
+    name: "PBKDF2",
+    salt: encoder.encode(salt),
+    iterations: 100000,
+    hash: "SHA-256"
+  },
+  keyMaterial,
+  256
+);
 
 return Array.from(new Uint8Array(hash))
   .map(function (byte) {
@@ -63,46 +60,30 @@ return Array.from(new Uint8Array(hash))
 
 async function createPasswordHash(password) {
 const salt = generateSalt();
+const hash = await hashValue(password, salt);
 
 ```
-const hash =
-  await hashValue(
-    password,
-    salt
-  );
-
 return salt + ":" + hash;
 ```
 
 }
 
-async function verifyPassword(
-password,
-storedHash
-) {
+async function verifyPassword(password, storedHash) {
 if (!storedHash) {
 return false;
 }
 
 ```
-const parts =
-  storedHash.split(":");
+const parts = storedHash.split(":");
 
 if (parts.length !== 2) {
   return false;
 }
 
-const salt =
-  parts[0];
+const salt = parts[0];
+const originalHash = parts[1];
 
-const originalHash =
-  parts[1];
-
-const newHash =
-  await hashValue(
-    password,
-    salt
-  );
+const newHash = await hashValue(password, salt);
 
 return newHash === originalHash;
 ```
@@ -110,15 +91,13 @@ return newHash === originalHash;
 }
 
 async function createSecurityAnswerHash(answer) {
-const salt =
-generateSalt();
+const salt = generateSalt();
 
 ```
-const hash =
-  await hashValue(
-    answer.trim().toLowerCase(),
-    salt
-  );
+const hash = await hashValue(
+  answer.trim().toLowerCase(),
+  salt
+);
 
 return salt + ":" + hash;
 ```
@@ -137,19 +116,15 @@ display_name: user.display_name
 }
 
 function getLoggedUser() {
-try {
-const raw =
-localStorage.getItem(
-"loggedUser"
-);
+const raw = localStorage.getItem("loggedUser");
 
 ```
-  if (!raw) {
-    return null;
-  }
+if (!raw) {
+  return null;
+}
 
-  const user =
-    JSON.parse(raw);
+try {
+  const user = JSON.parse(raw);
 
   if (
     !user ||
@@ -160,12 +135,14 @@ localStorage.getItem(
   }
 
   return user;
-}
-
-catch (error) {
+} catch (error) {
   console.error(
     "Error leyendo sesión:",
     error
+  );
+
+  localStorage.removeItem(
+    "loggedUser"
   );
 
   return null;
@@ -176,26 +153,18 @@ catch (error) {
 
 function showApp() {
 const screenAuth =
-document.getElementById(
-"screen-auth"
-);
+document.getElementById("screen-auth");
 
 ```
 const screenApp =
-  document.getElementById(
-    "screen-app"
-  );
+  document.getElementById("screen-app");
 
 if (screenAuth) {
-  screenAuth.classList.add(
-    "hidden"
-  );
+  screenAuth.classList.add("hidden");
 }
 
 if (screenApp) {
-  screenApp.classList.remove(
-    "hidden"
-  );
+  screenApp.classList.remove("hidden");
 }
 ```
 
@@ -203,35 +172,25 @@ if (screenApp) {
 
 function showAuth() {
 const screenAuth =
-document.getElementById(
-"screen-auth"
-);
+document.getElementById("screen-auth");
 
 ```
 const screenApp =
-  document.getElementById(
-    "screen-app"
-  );
+  document.getElementById("screen-app");
 
 if (screenAuth) {
-  screenAuth.classList.remove(
-    "hidden"
-  );
+  screenAuth.classList.remove("hidden");
 }
 
 if (screenApp) {
-  screenApp.classList.add(
-    "hidden"
-  );
+  screenApp.classList.add("hidden");
 }
 ```
 
 }
 
 const registerForm =
-document.getElementById(
-"form-register"
-);
+document.getElementById("form-register");
 
 if (registerForm) {
 registerForm.addEventListener(
@@ -246,48 +205,36 @@ event.preventDefault();
 
     const displayName =
       document
-        .getElementById(
-          "reg-displayname"
-        )
+        .getElementById("reg-displayname")
         ?.value
         .trim() || "";
 
     const username =
       document
-        .getElementById(
-          "reg-username"
-        )
+        .getElementById("reg-username")
         ?.value
         .trim()
         .toLowerCase() || "";
 
     const password =
       document
-        .getElementById(
-          "reg-password"
-        )
+        .getElementById("reg-password")
         ?.value || "";
 
     const password2 =
       document
-        .getElementById(
-          "reg-password2"
-        )
+        .getElementById("reg-password2")
         ?.value || "";
 
     const secQuestion =
       document
-        .getElementById(
-          "reg-secquestion"
-        )
+        .getElementById("reg-secquestion")
         ?.value
         .trim() || "";
 
     const secAnswer =
       document
-        .getElementById(
-          "reg-secanswer"
-        )
+        .getElementById("reg-secanswer")
         ?.value
         .trim()
         .toLowerCase() || "";
@@ -343,15 +290,14 @@ event.preventDefault();
       const {
         data: existingUser,
         error: searchError
-      } =
-        await supabaseClient
-          .from("profiles")
-          .select("id")
-          .eq(
-            "username",
-            username
-          )
-          .maybeSingle();
+      } = await supabaseClient
+        .from("profiles")
+        .select("id")
+        .eq(
+          "username",
+          username
+        )
+        .maybeSingle();
 
       if (searchError) {
         throw searchError;
@@ -377,22 +323,21 @@ event.preventDefault();
       const {
         data: newUser,
         error: insertError
-      } =
-        await supabaseClient
-          .from("profiles")
-          .insert({
-            username: username,
-            display_name:
-              displayName || username,
-            password_hash:
-              passwordHash,
-            security_question:
-              secQuestion,
-            security_answer_hash:
-              securityAnswerHash
-          })
-          .select()
-          .single();
+      } = await supabaseClient
+        .from("profiles")
+        .insert({
+          username: username,
+          display_name:
+            displayName || username,
+          password_hash:
+            passwordHash,
+          security_question:
+            secQuestion,
+          security_answer_hash:
+            securityAnswerHash
+        })
+        .select()
+        .single();
 
       if (insertError) {
         throw insertError;
@@ -403,23 +348,19 @@ event.preventDefault();
         newUser
       );
 
-      saveSession(
-        newUser
-      );
-
-      errorElement.textContent =
-        "";
+      saveSession(newUser);
 
       registerForm.reset();
+
+      errorElement.textContent = "";
 
       alert(
         "Cuenta creada correctamente"
       );
 
       showApp();
-    }
 
-    catch (error) {
+    } catch (error) {
       console.error(
         "Error al registrar usuario:",
         error
@@ -436,9 +377,7 @@ event.preventDefault();
 }
 
 const loginForm =
-document.getElementById(
-"form-login"
-);
+document.getElementById("form-login");
 
 if (loginForm) {
 loginForm.addEventListener(
@@ -449,18 +388,14 @@ event.preventDefault();
 ```
     const username =
       document
-        .getElementById(
-          "login-username"
-        )
+        .getElementById("login-username")
         ?.value
         .trim()
         .toLowerCase() || "";
 
     const password =
       document
-        .getElementById(
-          "login-password"
-        )
+        .getElementById("login-password")
         ?.value || "";
 
     const errorElement =
@@ -489,17 +424,16 @@ event.preventDefault();
       const {
         data: user,
         error: searchError
-      } =
-        await supabaseClient
-          .from("profiles")
-          .select(
-            "id, username, display_name, password_hash"
-          )
-          .eq(
-            "username",
-            username
-          )
-          .maybeSingle();
+      } = await supabaseClient
+        .from("profiles")
+        .select(
+          "id, username, display_name, password_hash"
+        )
+        .eq(
+          "username",
+          username
+        )
+        .maybeSingle();
 
       if (searchError) {
         throw searchError;
@@ -529,9 +463,7 @@ event.preventDefault();
         return;
       }
 
-      saveSession(
-        user
-      );
+      saveSession(user);
 
       console.log(
         "Inicio de sesión correcto:",
@@ -539,14 +471,12 @@ event.preventDefault();
       );
 
       if (errorElement) {
-        errorElement.textContent =
-          "";
+        errorElement.textContent = "";
       }
 
       showApp();
-    }
 
-    catch (error) {
+    } catch (error) {
       console.error(
         "Error al iniciar sesión:",
         error
@@ -576,16 +506,12 @@ loggedUser.username
 showApp();
 ```
 
-}
-
-else {
+} else {
 showAuth();
 }
 
 const logoutButton =
-document.getElementById(
-"logout"
-);
+document.getElementById("logout");
 
 if (logoutButton) {
 logoutButton.addEventListener(
