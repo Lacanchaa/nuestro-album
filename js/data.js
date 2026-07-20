@@ -1,313 +1,154 @@
-import {
-  lsGet,
-  lsSet,
-  genId,
-  idbDelete
-} from './storage.js';
+// ============================================================
+// data.js — Datos separados por usuario
+// ============================================================
 
-import {
-  getCurrentUser
-} from './auth.js';
+import { getCurrentUser } from './auth.js';
 
-const DAYS_KEY = 'days';
-const NOTES_KEY = 'notes';
-const EVENTS_KEY = 'events';
-const SETTINGS_KEY = 'settings';
-const GALLERY_FAV_KEY = 'gallery_favorites';
-const PLAYLIST_KEY = 'playlist';
+const supabaseClient = window.supabaseClient;
 
-const DEFAULT_SETTINGS = {
-
-  coupleName: 'Nuestro Álbum',
-
-  relationshipDate: '',
-
-  dashboardMessage:
-    'Cada día contigo es una página más de nuestra historia. 💛',
-
-  kissCount: 0,
-
-  hugCount: 0,
-
-  bucketList: [],
-
-  theme: 'rosa',
-
-  template: 'romantica',
-
-  lang: 'es',
-
-  dateFormat: 'DD/MM/YYYY',
-
-  animations: true,
-
-  inactivityLockMinutes: 10,
-
-  notifications: true
-
-};
-
-// ------------------------------------------------------------
-// USUARIO ACTUAL
-// ------------------------------------------------------------
-
-function getUsername() {
-
+function requireUser() {
   const user = getCurrentUser();
 
-  return user?.username || null;
-}
-
-// ------------------------------------------------------------
-// CLAVE POR USUARIO
-// ------------------------------------------------------------
-
-function getUserKey(baseKey) {
-
-  const username = getUsername();
-
-  if (!username) {
-
-    console.warn(
-      `No hay usuario para guardar ${baseKey}`
-    );
-
-    return null;
+  if (!user || !user.id) {
+    throw new Error('No hay un usuario conectado');
   }
 
-  return `${baseKey}_${username}`;
+  return user;
 }
 
-// ------------------------------------------------------------
-// OBTENER DATOS
-// ------------------------------------------------------------
+export async function getUserStorage() {
+  const user = requireUser();
 
-function getUserData(
-  baseKey,
-  fallback
-) {
+  const { data, error } =
+    await supabaseClient
+      .from('user_storage')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
-  const key = getUserKey(
-    baseKey
-  );
+  if (error) throw error;
 
-  if (!key) {
+  if (!data) {
+    const { data: newStorage, error: insertError } =
+      await supabaseClient
+        .from('user_storage')
+        .insert({
+          user_id: user.id,
+          days: {},
+          notes: [],
+          events: [],
+          settings: {},
+          gallery_favorites: [],
+          playlist: []
+        })
+        .select()
+        .single();
 
-    return fallback;
+    if (insertError) throw insertError;
+
+    return newStorage;
   }
 
-  return lsGet(
-    key,
-    fallback
-  );
+  return data;
 }
 
-// ------------------------------------------------------------
-// GUARDAR DATOS
-// ------------------------------------------------------------
+export async function saveUserStorage(patch) {
+  const user = requireUser();
 
-function saveUserData(
-  baseKey,
-  data
-) {
+  const { data, error } =
+    await supabaseClient
+      .from('user_storage')
+      .update(patch)
+      .eq('user_id', user.id)
+      .select()
+      .single();
 
-  const key = getUserKey(
-    baseKey
-  );
+  if (error) throw error;
 
-  if (!key) {
-
-    return false;
-  }
-
-  return lsSet(
-    key,
-    data
-  );
+  return data;
 }
 
 // ------------------------------------------------------------
 // SETTINGS
 // ------------------------------------------------------------
 
-export function getSettings() {
+const DEFAULT_SETTINGS = {
+  coupleName: 'Nuestro Álbum',
+  relationshipDate: '',
+  dashboardMessage:
+    'Cada día contigo es una página más de nuestra historia. 💛',
+  kissCount: 0,
+  hugCount: 0,
+  bucketList: [],
+  theme: 'rosa',
+  template: 'romantica',
+  lang: 'es',
+  dateFormat: 'DD/MM/YYYY',
+  animations: true,
+  inactivityLockMinutes: 10,
+  notifications: true
+};
+
+export async function getSettings() {
+  const storage = await getUserStorage();
 
   return {
-
     ...DEFAULT_SETTINGS,
-
-    ...getUserData(
-      SETTINGS_KEY,
-      {}
-    )
-
+    ...(storage.settings || {})
   };
 }
 
-export function saveSettings(
-  patch
-) {
-
-  const current =
-    getSettings();
+export async function saveSettings(patch) {
+  const current = await getSettings();
 
   const updated = {
-
     ...current,
-
     ...patch
-
   };
 
-  saveUserData(
-    SETTINGS_KEY,
-    updated
-  );
+  await saveUserStorage({
+    settings: updated
+  });
 
   return updated;
-}
-
-// ------------------------------------------------------------
-// DÍAS
-// ------------------------------------------------------------
-
-export function getAllDays() {
-
-  return getUserData(
-    DAYS_KEY,
-    {}
-  );
-}
-
-export function getDay(
-  dateIso
-) {
-
-  const days =
-    getAllDays();
-
-  return days[dateIso] || {
-
-    date: dateIso,
-
-    comment: '',
-
-    media: []
-
-  };
-}
-
-export function saveDay(
-  dateIso,
-  dayData
-) {
-
-  const days =
-    getAllDays();
-
-  days[dateIso] = {
-
-    ...dayData,
-
-    date: dateIso
-
-  };
-
-  saveUserData(
-    DAYS_KEY,
-    days
-  );
-
-  return days[dateIso];
 }
 
 // ------------------------------------------------------------
 // PLAYLIST
 // ------------------------------------------------------------
 
-export function getPlaylist() {
+export async function getPlaylist() {
+  const storage = await getUserStorage();
 
-  return getUserData(
-    PLAYLIST_KEY,
-    []
-  );
+  return storage.playlist || [];
 }
 
-export function savePlaylist(
-  list
-) {
-
-  saveUserData(
-    PLAYLIST_KEY,
-    list
-  );
-
-  return list;
-}
-
-export function addTrackToPlaylist(
-  track
-) {
-
-  const list =
-    getPlaylist();
-
-  list.push({
-
-    id: genId(),
-
-    ...track
-
+export async function savePlaylist(list) {
+  await saveUserStorage({
+    playlist: list
   });
 
-  savePlaylist(
-    list
-  );
+  return list;
+}
+
+export async function addTrackToPlaylist(track) {
+  const list = await getPlaylist();
+
+  list.push(track);
+
+  await savePlaylist(list);
 
   return list;
 }
 
-export async function removeTrackFromPlaylist(
-  id
-) {
+export async function removeTrackFromPlaylist(id) {
+  const list = await getPlaylist();
 
-  const list =
-    getPlaylist();
-
-  const track =
-    list.find(
-      item => item.id === id
-    );
-
-  if (
-    track &&
-    track.source === 'file' &&
-    track.refId
-  ) {
-
-    try {
-
-      await idbDelete(
-        track.refId
-      );
-
-    } catch (error) {
-
-      console.warn(
-        'No se pudo eliminar el archivo',
-        error
-      );
-    }
-  }
-
-  const updated =
-    list.filter(
-      item => item.id !== id
-    );
-
-  savePlaylist(
-    updated
+  const updated = list.filter(
+    track => track.id !== id
   );
+
+  await savePlaylist(updated);
 
   return updated;
 }
