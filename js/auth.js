@@ -393,20 +393,15 @@
     );
   }
 
-  const loggedUser =
-    getLoggedUser();
+   const loggedUser = getLoggedUser();
 
-  if (
-    loggedUser &&
-    loggedUser.username
-  ) {
+  if (loggedUser && loggedUser.username) {
     console.log(
       "Sesión restaurada:",
       loggedUser.username
     );
 
     showApp();
-
   } else {
     showAuth();
   }
@@ -418,10 +413,7 @@
     logoutButton.addEventListener(
       "click",
       function () {
-        localStorage.removeItem(
-          "loggedUser"
-        );
-
+        localStorage.removeItem("loggedUser");
         showAuth();
       }
     );
