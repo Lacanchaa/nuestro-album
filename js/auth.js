@@ -1,32 +1,31 @@
 (function () {
   "use strict";
 
-  const supabase = window.supabaseClient;
+  console.log("AUTH.JS CARGADO");
 
-  if (!supabase) {
-    console.error("Supabase no está conectado.");
+  const supabaseClient = window.supabaseClient;
+
+  if (!supabaseClient) {
+    console.error("ERROR: Supabase no está conectado.");
     return;
   }
 
-  const formLogin = document.getElementById("form-login");
+  console.log("SUPABASE CONECTADO");
+
   const formRegister = document.getElementById("form-register");
-
-  const loginError = document.getElementById("login-error");
-  const registerError = document.getElementById("register-error");
-
-  function showError(element, message) {
-    if (element) {
-      element.textContent = message;
-    }
-  }
+  const formLogin = document.getElementById("form-login");
 
   // =========================
   // REGISTRO
   // =========================
 
   if (formRegister) {
+
     formRegister.addEventListener("submit", async function (event) {
+
       event.preventDefault();
+
+      console.log("BOTÓN REGISTRO PRESIONADO");
 
       const displayName =
         document.getElementById("reg-displayname").value.trim();
@@ -40,44 +39,70 @@
       const password2 =
         document.getElementById("reg-password2").value;
 
+
       if (password !== password2) {
-        showError(
-          registerError,
-          "Las contraseñas no coinciden."
-        );
+
+        document.getElementById("register-error").textContent =
+          "Las contraseñas no coinciden.";
+
         return;
+
       }
 
-      const email = username.toLowerCase() + "@nuestroalbum.app";
 
-      const {
-        data,
-        error
-      } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-          data: {
-            display_name: displayName,
-            username: username
+      const email =
+        username.toLowerCase() + "@nuestroalbum.app";
+
+
+      console.log("CREANDO USUARIO:", email);
+
+
+      const result =
+        await supabaseClient.auth.signUp({
+
+          email: email,
+
+          password: password,
+
+          options: {
+
+            data: {
+
+              display_name: displayName,
+
+              username: username
+
+            }
+
           }
-        }
-      });
 
-      if (error) {
-        showError(
-          registerError,
-          error.message
+        });
+
+
+      console.log("RESPUESTA SUPABASE:", result);
+
+
+      if (result.error) {
+
+        document.getElementById("register-error").textContent =
+          result.error.message;
+
+        console.error(
+          "ERROR DE SUPABASE:",
+          result.error
         );
+
         return;
+
       }
 
-      alert("Cuenta creada correctamente.");
 
-      if (window.showAuthForm) {
-        window.showAuthForm("login");
-      }
+      alert(
+        "Usuario creado correctamente."
+      );
+
     });
+
   }
 
 
@@ -86,7 +111,9 @@
   // =========================
 
   if (formLogin) {
+
     formLogin.addEventListener("submit", async function (event) {
+
       event.preventDefault();
 
       const username =
@@ -95,94 +122,36 @@
       const password =
         document.getElementById("login-password").value;
 
-      const email = username.toLowerCase() + "@nuestroalbum.app";
 
-      const {
-        data,
-        error
-      } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
+      const email =
+        username.toLowerCase() + "@nuestroalbum.app";
 
-      if (error) {
-        showError(
-          loginError,
-          "Usuario o contraseña incorrectos."
-        );
+
+      const result =
+        await supabaseClient.auth.signInWithPassword({
+
+          email: email,
+
+          password: password
+
+        });
+
+
+      if (result.error) {
+
+        document.getElementById("login-error").textContent =
+          result.error.message;
+
         return;
+
       }
 
-      console.log("Sesión iniciada:", data.user);
-
-      window.location.reload();
-    });
-  }
-
-
-  // =========================
-  // CERRAR SESIÓN
-  // =========================
-
-  const logoutButton =
-    document.getElementById("btn-logout");
-
-  if (logoutButton) {
-    logoutButton.addEventListener("click", async function () {
-
-      await supabase.auth.signOut();
 
       window.location.reload();
 
     });
+
   }
 
-
-  // =========================
-  // COMPROBAR SESIÓN
-  // =========================
-
-  supabase.auth.getSession().then(function (result) {
-
-    const session = result.data.session;
-
-    const loading =
-      document.getElementById("screen-loading");
-
-    const auth =
-      document.getElementById("screen-auth");
-
-    const app =
-      document.getElementById("screen-app");
-
-
-    if (loading) {
-      loading.classList.add("hidden");
-    }
-
-
-    if (session) {
-
-      if (auth) {
-        auth.classList.add("hidden");
-      }
-
-      if (app) {
-        app.classList.remove("hidden");
-      }
-
-    } else {
-
-      if (auth) {
-        auth.classList.remove("hidden");
-      }
-
-      if (app) {
-        app.classList.add("hidden");
-      }
-
-    }
-
-  });
 
 })();
