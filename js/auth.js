@@ -10,9 +10,9 @@ return;
 
 console.log("Supabase conectado correctamente");
 
-// =====================================================
+// ================================
 // HASH
-// =====================================================
+// ================================
 
 function generateSalt() {
 const array = new Uint8Array(16);
@@ -33,26 +33,26 @@ async function hashValue(value, salt) {
 const encoder = new TextEncoder();
 
 ```
-const keyMaterial = await crypto.subtle.importKey(
-  "raw",
-  encoder.encode(value),
-  {
-    name: "PBKDF2"
-  },
-  false,
-  ["deriveBits"]
-);
+const keyMaterial =
+  await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(value),
+    { name: "PBKDF2" },
+    false,
+    ["deriveBits"]
+  );
 
-const hash = await crypto.subtle.deriveBits(
-  {
-    name: "PBKDF2",
-    salt: encoder.encode(salt),
-    iterations: 100000,
-    hash: "SHA-256"
-  },
-  keyMaterial,
-  256
-);
+const hash =
+  await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      salt: encoder.encode(salt),
+      iterations: 100000,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    256
+  );
 
 return Array.from(new Uint8Array(hash))
   .map(function (byte) {
@@ -88,7 +88,8 @@ if (parts.length !== 2) {
 const salt = parts[0];
 const originalHash = parts[1];
 
-const newHash = await hashValue(password, salt);
+const newHash =
+  await hashValue(password, salt);
 
 return newHash === originalHash;
 ```
@@ -99,19 +100,20 @@ async function createSecurityAnswerHash(answer) {
 const salt = generateSalt();
 
 ```
-const hash = await hashValue(
-  answer.trim().toLowerCase(),
-  salt
-);
+const hash =
+  await hashValue(
+    answer.trim().toLowerCase(),
+    salt
+  );
 
 return salt + ":" + hash;
 ```
 
 }
 
-// =====================================================
+// ================================
 // SESIÓN
-// =====================================================
+// ================================
 
 function saveSession(user) {
 const session = {
@@ -130,7 +132,10 @@ localStorage.setItem(
 }
 
 function getLoggedUser() {
-const raw = localStorage.getItem("loggedUser");
+const raw =
+localStorage.getItem(
+"loggedUser"
+);
 
 ```
 if (!raw) {
@@ -138,25 +143,11 @@ if (!raw) {
 }
 
 try {
-  const user = JSON.parse(raw);
-
-  if (
-    !user ||
-    !user.id ||
-    !user.username
-  ) {
-    return null;
-  }
-
-  return user;
-
+  return JSON.parse(raw);
 } catch (error) {
-  console.error(
-    "Error leyendo sesión:",
-    error
+  localStorage.removeItem(
+    "loggedUser"
   );
-
-  localStorage.removeItem("loggedUser");
 
   return null;
 }
@@ -164,54 +155,72 @@ try {
 
 }
 
-// =====================================================
+// ================================
 // PANTALLAS
-// =====================================================
+// ================================
 
 function showApp() {
-const screenAuth =
-document.getElementById("screen-auth");
+const auth =
+document.getElementById(
+"screen-auth"
+);
 
 ```
-const screenApp =
-  document.getElementById("screen-app");
+const app =
+  document.getElementById(
+    "screen-app"
+  );
 
-if (screenAuth) {
-  screenAuth.classList.add("hidden");
+if (auth) {
+  auth.classList.add(
+    "hidden"
+  );
 }
 
-if (screenApp) {
-  screenApp.classList.remove("hidden");
+if (app) {
+  app.classList.remove(
+    "hidden"
+  );
 }
 ```
 
 }
 
 function showAuth() {
-const screenAuth =
-document.getElementById("screen-auth");
+const auth =
+document.getElementById(
+"screen-auth"
+);
 
 ```
-const screenApp =
-  document.getElementById("screen-app");
+const app =
+  document.getElementById(
+    "screen-app"
+  );
 
-if (screenAuth) {
-  screenAuth.classList.remove("hidden");
+if (auth) {
+  auth.classList.remove(
+    "hidden"
+  );
 }
 
-if (screenApp) {
-  screenApp.classList.add("hidden");
+if (app) {
+  app.classList.add(
+    "hidden"
+  );
 }
 ```
 
 }
 
-// =====================================================
+// ================================
 // REGISTRO
-// =====================================================
+// ================================
 
 const registerForm =
-document.getElementById("form-register");
+document.getElementById(
+"form-register"
+);
 
 if (registerForm) {
 registerForm.addEventListener(
@@ -220,60 +229,40 @@ async function (event) {
 event.preventDefault();
 
 ```
-    const displayNameInput =
-      document.getElementById("reg-displayname");
-
-    const usernameInput =
-      document.getElementById("reg-username");
-
-    const passwordInput =
-      document.getElementById("reg-password");
-
-    const password2Input =
-      document.getElementById("reg-password2");
-
-    const secQuestionInput =
-      document.getElementById("reg-secquestion");
-
-    const secAnswerInput =
-      document.getElementById("reg-secanswer");
-
-    const errorElement =
-      document.getElementById("register-error");
-
-    if (
-      !displayNameInput ||
-      !usernameInput ||
-      !passwordInput ||
-      !password2Input ||
-      !secQuestionInput ||
-      !secAnswerInput ||
-      !errorElement
-    ) {
-      console.error(
-        "Faltan elementos del formulario de registro"
-      );
-
-      return;
-    }
-
     const displayName =
-      displayNameInput.value.trim();
+      document.getElementById(
+        "reg-displayname"
+      ).value.trim();
 
     const username =
-      usernameInput.value.trim().toLowerCase();
+      document.getElementById(
+        "reg-username"
+      ).value.trim().toLowerCase();
 
     const password =
-      passwordInput.value;
+      document.getElementById(
+        "reg-password"
+      ).value;
 
     const password2 =
-      password2Input.value;
+      document.getElementById(
+        "reg-password2"
+      ).value;
 
     const secQuestion =
-      secQuestionInput.value.trim();
+      document.getElementById(
+        "reg-secquestion"
+      ).value.trim();
 
     const secAnswer =
-      secAnswerInput.value.trim().toLowerCase();
+      document.getElementById(
+        "reg-secanswer"
+      ).value.trim().toLowerCase();
+
+    const errorElement =
+      document.getElementById(
+        "register-error"
+      );
 
     if (username.length < 3) {
       errorElement.textContent =
@@ -307,18 +296,21 @@ event.preventDefault();
       errorElement.textContent =
         "Creando cuenta...";
 
-      const existingUserResult =
+      const result =
         await supabaseClient
           .from("profiles")
           .select("id")
-          .eq("username", username)
+          .eq(
+            "username",
+            username
+          )
           .maybeSingle();
 
-      if (existingUserResult.error) {
-        throw existingUserResult.error;
+      if (result.error) {
+        throw result.error;
       }
 
-      if (existingUserResult.data) {
+      if (result.data) {
         errorElement.textContent =
           "Ese nombre de usuario ya está registrado";
 
@@ -326,20 +318,28 @@ event.preventDefault();
       }
 
       const passwordHash =
-        await createPasswordHash(password);
+        await createPasswordHash(
+          password
+        );
 
       const securityAnswerHash =
-        await createSecurityAnswerHash(secAnswer);
+        await createSecurityAnswerHash(
+          secAnswer
+        );
 
       const insertResult =
         await supabaseClient
           .from("profiles")
           .insert({
             username: username,
-            display_name: displayName || username,
-            password_hash: passwordHash,
-            security_question: secQuestion,
-            security_answer_hash: securityAnswerHash
+            display_name:
+              displayName || username,
+            password_hash:
+              passwordHash,
+            security_question:
+              secQuestion,
+            security_answer_hash:
+              securityAnswerHash
           })
           .select()
           .single();
@@ -348,22 +348,19 @@ event.preventDefault();
         throw insertResult.error;
       }
 
-      if (!insertResult.data) {
-        throw new Error(
-          "No se pudo crear el perfil"
-        );
-      }
-
       console.log(
-        "Usuario registrado correctamente:",
+        "Usuario registrado:",
         insertResult.data
       );
 
-      saveSession(insertResult.data);
+      saveSession(
+        insertResult.data
+      );
 
       registerForm.reset();
 
-      errorElement.textContent = "";
+      errorElement.textContent =
+        "";
 
       alert(
         "Cuenta creada correctamente"
@@ -387,12 +384,14 @@ event.preventDefault();
 
 }
 
-// =====================================================
+// ================================
 // LOGIN
-// =====================================================
+// ================================
 
 const loginForm =
-document.getElementById("form-login");
+document.getElementById(
+"form-login"
+);
 
 if (loginForm) {
 loginForm.addEventListener(
@@ -401,32 +400,20 @@ async function (event) {
 event.preventDefault();
 
 ```
-    const usernameInput =
-      document.getElementById("login-username");
-
-    const passwordInput =
-      document.getElementById("login-password");
-
-    const errorElement =
-      document.getElementById("login-error");
-
-    if (
-      !usernameInput ||
-      !passwordInput ||
-      !errorElement
-    ) {
-      console.error(
-        "Faltan elementos del formulario de login"
-      );
-
-      return;
-    }
-
     const username =
-      usernameInput.value.trim().toLowerCase();
+      document.getElementById(
+        "login-username"
+      ).value.trim().toLowerCase();
 
     const password =
-      passwordInput.value;
+      document.getElementById(
+        "login-password"
+      ).value;
+
+    const errorElement =
+      document.getElementById(
+        "login-error"
+      );
 
     if (!username || !password) {
       errorElement.textContent =
@@ -439,47 +426,53 @@ event.preventDefault();
       errorElement.textContent =
         "Iniciando sesión...";
 
-      const userResult =
+      const result =
         await supabaseClient
           .from("profiles")
           .select(
             "id, username, display_name, password_hash"
           )
-          .eq("username", username)
+          .eq(
+            "username",
+            username
+          )
           .maybeSingle();
 
-      if (userResult.error) {
-        throw userResult.error;
+      if (result.error) {
+        throw result.error;
       }
 
-      if (!userResult.data) {
+      if (!result.data) {
         errorElement.textContent =
           "Usuario o contraseña incorrectos";
 
         return;
       }
 
-      const passwordCorrect =
+      const correct =
         await verifyPassword(
           password,
-          userResult.data.password_hash
+          result.data.password_hash
         );
 
-      if (!passwordCorrect) {
+      if (!correct) {
         errorElement.textContent =
           "Usuario o contraseña incorrectos";
 
         return;
       }
 
-      saveSession(userResult.data);
+      saveSession(
+        result.data
+      );
 
       console.log(
         "Inicio de sesión correcto:",
-        userResult.data.username
+        result.data.username
       );
 
-      errorElement.textContent = "";
+      errorElement.textContent =
+        "";
 
       showApp();
 
@@ -498,17 +491,14 @@ event.preventDefault();
 
 }
 
-// =====================================================
+// ================================
 // RESTAURAR SESIÓN
-// =====================================================
+// ================================
 
 const loggedUser =
 getLoggedUser();
 
-if (
-loggedUser &&
-loggedUser.username
-) {
+if (loggedUser && loggedUser.username) {
 console.log(
 "Sesión restaurada:",
 loggedUser.username
@@ -522,13 +512,14 @@ showApp();
 showAuth();
 }
 
-// =====================================================
+// ================================
 // CERRAR SESIÓN
-// =====================================================
+// ================================
 
-// Tu HTML utiliza id="btn-logout"
 const logoutButton =
-document.getElementById("btn-logout");
+document.getElementById(
+"logout"
+);
 
 if (logoutButton) {
 logoutButton.addEventListener(
