@@ -1,16 +1,39 @@
-```js
 // ============================================================
 // app.js — Orquestador principal de la aplicación
 // DATOS Y CONFIGURACIÓN SEPARADOS POR USUARIO
 // ============================================================
 
 import * as auth from './auth.js';
-import { getSettings, saveSettings } from './data.js';
-import { toast } from './ui.js';
-import { getLang, setLang, applyTranslations, t } from './i18n.js';
-import { applyTheme } from './theme.js';
-import { startFx, stopFx, isFxRunning } from './fx.js';
-import { initPlayer } from './music.js';
+
+import {
+  getSettings,
+  saveSettings
+} from './data.js';
+
+import {
+  toast
+} from './ui.js';
+
+import {
+  getLang,
+  setLang,
+  applyTranslations,
+  t
+} from './i18n.js';
+
+import {
+  applyTheme
+} from './theme.js';
+
+import {
+  startFx,
+  stopFx,
+  isFxRunning
+} from './fx.js';
+
+import {
+  initPlayer
+} from './music.js';
 
 import * as viewDashboard from './views/dashboard.js';
 import * as viewCalendar from './views/calendar.js';
@@ -19,6 +42,11 @@ import * as viewEvents from './views/events.js';
 import * as viewNotes from './views/notes.js';
 import * as viewGallery from './views/gallery.js';
 import * as viewSettings from './views/settings.js';
+
+
+// ============================================================
+// VISTAS
+// ============================================================
 
 const VIEWS = {
   dashboard: viewDashboard,
@@ -30,18 +58,30 @@ const VIEWS = {
   settings: viewSettings
 };
 
+
+// ============================================================
+// ESTADO GLOBAL
+// ============================================================
+
 let activeView = null;
 let inactivityTimer = null;
 let inactivityWatchersInstalled = false;
+let authFormsInstalled = false;
+let navInstalled = false;
+let topbarInstalled = false;
+let playerInitialized = false;
+
 
 // ============================================================
 // PANTALLAS
 // ============================================================
 
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(screen => {
-    screen.classList.add('hidden');
-  });
+  document
+    .querySelectorAll('.screen')
+    .forEach(screen => {
+      screen.classList.add('hidden');
+    });
 
   const screen = document.getElementById(id);
 
@@ -50,17 +90,12 @@ function showScreen(id) {
   }
 }
 
+
 // ============================================================
-// BOOTSTRAP
+// BOOT
 // ============================================================
 
 function boot() {
-  /*
-   * IMPORTANTE:
-   * Primero comprobamos si existe un usuario autenticado.
-   * Solo después cargamos sus datos y configuración.
-   */
-
   if (auth.isAuthenticated()) {
     enterApp();
   } else {
@@ -72,230 +107,435 @@ function boot() {
   wireUnlockForm();
 }
 
+
 // ============================================================
-// AUTH
+// FORMULARIOS DE AUTENTICACIÓN
 // ============================================================
 
 function wireAuthForms() {
-  document.querySelectorAll('[data-goto]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = btn.dataset.goto;
+  if (authFormsInstalled) return;
 
-      ['login', 'register', 'recover'].forEach(name => {
-        const form = document.getElementById(`form-${name}`);
+  authFormsInstalled = true;
 
-        if (form) {
-          form.classList.toggle('hidden', name !== target);
+  // ----------------------------------------------------------
+  // CAMBIAR ENTRE LOGIN / REGISTRO / RECUPERACIÓN
+  // ----------------------------------------------------------
+
+  document
+    .querySelectorAll('[data-goto]')
+    .forEach(button => {
+
+      button.addEventListener('click', () => {
+
+        const target = button.dataset.goto;
+
+        [
+          'login',
+          'register',
+          'recover'
+        ].forEach(name => {
+
+          const form =
+            document.getElementById(
+              `form-${name}`
+            );
+
+          if (form) {
+            form.classList.toggle(
+              'hidden',
+              name !== target
+            );
+          }
+        });
+
+        clearAuthErrors();
+      });
+    });
+
+
+  // ----------------------------------------------------------
+  // LOGIN
+  // ----------------------------------------------------------
+
+  const loginForm =
+    document.getElementById(
+      'form-login'
+    );
+
+  if (loginForm) {
+
+    loginForm.addEventListener(
+      'submit',
+      async event => {
+
+        event.preventDefault();
+
+        const username =
+          document
+            .getElementById(
+              'login-username'
+            )
+            ?.value
+            .trim();
+
+        const password =
+          document
+            .getElementById(
+              'login-password'
+            )
+            ?.value;
+
+        const remember =
+          document
+            .getElementById(
+              'login-remember'
+            )
+            ?.checked;
+
+        const errorElement =
+          document.getElementById(
+            'login-error'
+          );
+
+        try {
+
+          await auth.loginUser({
+            username,
+            password,
+            remember
+          });
+
+          if (errorElement) {
+            errorElement.textContent = '';
+          }
+
+          enterApp();
+
+        } catch (error) {
+
+          if (errorElement) {
+            errorElement.textContent =
+              error.message ||
+              'Usuario o contraseña incorrectos';
+          }
         }
-      });
-
-      clearAuthErrors();
-    });
-  });
-
-  // ---------------- LOGIN ----------------
-
-  document
-    .getElementById('form-login')
-    .addEventListener('submit', async e => {
-      e.preventDefault();
-
-      const username =
-        document.getElementById('login-username').value;
-
-      const password =
-        document.getElementById('login-password').value;
-
-      const remember =
-        document.getElementById('login-remember').checked;
-
-      const errorEl =
-        document.getElementById('login-error');
-
-      try {
-        await auth.loginUser({
-          username,
-          password,
-          remember
-        });
-
-        errorEl.textContent = '';
-
-        /*
-         * Al iniciar sesión, getSettings(), getNotes(),
-         * getEvents(), getDays(), etc. usarán automáticamente
-         * el usuario recién conectado.
-         */
-
-        enterApp();
-
-      } catch (err) {
-        errorEl.textContent = err.message;
       }
-    });
+    );
+  }
 
-  // ---------------- REGISTER ----------------
 
-  document
-    .getElementById('form-register')
-    .addEventListener('submit', async e => {
-      e.preventDefault();
+  // ----------------------------------------------------------
+  // REGISTRO
+  // ----------------------------------------------------------
 
-      const displayName =
-        document.getElementById('reg-displayname').value;
+  const registerForm =
+    document.getElementById(
+      'form-register'
+    );
 
-      const username =
-        document.getElementById('reg-username').value;
+  if (registerForm) {
 
-      const password =
-        document.getElementById('reg-password').value;
+    registerForm.addEventListener(
+      'submit',
+      async event => {
 
-      const password2 =
-        document.getElementById('reg-password2').value;
+        event.preventDefault();
 
-      const secQuestion =
-        document.getElementById('reg-secquestion').value;
+        const displayName =
+          document
+            .getElementById(
+              'reg-displayname'
+            )
+            ?.value
+            .trim();
 
-      const secAnswer =
-        document.getElementById('reg-secanswer').value;
+        const username =
+          document
+            .getElementById(
+              'reg-username'
+            )
+            ?.value
+            .trim();
 
-      const errorEl =
-        document.getElementById('register-error');
+        const password =
+          document
+            .getElementById(
+              'reg-password'
+            )
+            ?.value;
 
-      if (password !== password2) {
-        errorEl.textContent =
-          getLang() === 'en'
-            ? 'Passwords do not match'
-            : 'Las contraseñas no coinciden';
+        const password2 =
+          document
+            .getElementById(
+              'reg-password2'
+            )
+            ?.value;
 
-        return;
+        const secQuestion =
+          document
+            .getElementById(
+              'reg-secquestion'
+            )
+            ?.value
+            .trim();
+
+        const secAnswer =
+          document
+            .getElementById(
+              'reg-secanswer'
+            )
+            ?.value
+            .trim();
+
+        const errorElement =
+          document.getElementById(
+            'register-error'
+          );
+
+        if (password !== password2) {
+
+          if (errorElement) {
+            errorElement.textContent =
+              getLang() === 'en'
+                ? 'Passwords do not match'
+                : 'Las contraseñas no coinciden';
+          }
+
+          return;
+        }
+
+        try {
+
+          await auth.registerUser({
+            username,
+            password,
+            displayName,
+            secQuestion,
+            secAnswer
+          });
+
+          await auth.loginUser({
+            username,
+            password,
+            remember: true
+          });
+
+          if (errorElement) {
+            errorElement.textContent = '';
+          }
+
+          toast(
+            getLang() === 'en'
+              ? 'Account created'
+              : 'Cuenta creada',
+            'success'
+          );
+
+          enterApp();
+
+        } catch (error) {
+
+          if (errorElement) {
+            errorElement.textContent =
+              error.message ||
+              'Error al crear la cuenta';
+          }
+        }
       }
+    );
+  }
 
-      try {
-        await auth.registerUser({
-          username,
-          password,
-          displayName,
-          secQuestion,
-          secAnswer
-        });
 
-        /*
-         * El usuario recién creado se convierte en el usuario
-         * actual y todos sus datos se guardarán con su username.
-         */
+  // ----------------------------------------------------------
+  // RECUPERAR CONTRASEÑA - PASO 1
+  // ----------------------------------------------------------
 
-        await auth.loginUser({
-          username,
-          password,
-          remember: true
-        });
+  const recoverStep1 =
+    document.getElementById(
+      'rec-step1-btn'
+    );
 
-        errorEl.textContent = '';
+  if (recoverStep1) {
 
-        toast(
-          getLang() === 'en'
-            ? 'Account created'
-            : 'Cuenta creada',
-          'success'
-        );
+    recoverStep1.addEventListener(
+      'click',
+      () => {
 
-        enterApp();
+        const username =
+          document
+            .getElementById(
+              'rec-username'
+            )
+            ?.value
+            .trim();
 
-      } catch (err) {
-        errorEl.textContent = err.message;
+        const errorElement =
+          document.getElementById(
+            'recover-error'
+          );
+
+        try {
+
+          const question =
+            auth.getSecurityQuestion(
+              username
+            );
+
+          const questionLabel =
+            document.getElementById(
+              'rec-question-label'
+            );
+
+          if (questionLabel) {
+            questionLabel.textContent =
+              question;
+          }
+
+          document
+            .getElementById(
+              'rec-step2'
+            )
+            ?.classList
+            .remove(
+              'hidden'
+            );
+
+          recoverStep1.classList.add(
+            'hidden'
+          );
+
+          document
+            .getElementById(
+              'rec-step2-btn'
+            )
+            ?.classList
+            .remove(
+              'hidden'
+            );
+
+          if (errorElement) {
+            errorElement.textContent = '';
+          }
+
+        } catch (error) {
+
+          if (errorElement) {
+            errorElement.textContent =
+              error.message;
+          }
+        }
       }
-    });
+    );
+  }
 
-  // ---------------- RECOVER PASSWORD ----------------
 
-  const rec1 =
-    document.getElementById('rec-step1-btn');
+  // ----------------------------------------------------------
+  // RECUPERAR CONTRASEÑA - PASO 2
+  // ----------------------------------------------------------
 
-  const rec2 =
-    document.getElementById('rec-step2-btn');
+  const recoverStep2 =
+    document.getElementById(
+      'rec-step2-btn'
+    );
 
-  rec1.addEventListener('click', () => {
-    const username =
-      document.getElementById('rec-username').value;
+  if (recoverStep2) {
 
-    const errorEl =
-      document.getElementById('recover-error');
+    recoverStep2.addEventListener(
+      'click',
+      async () => {
 
-    try {
-      const question =
-        auth.getSecurityQuestion(username);
+        const username =
+          document
+            .getElementById(
+              'rec-username'
+            )
+            ?.value
+            .trim();
 
-      document.getElementById(
-        'rec-question-label'
-      ).textContent = question;
+        const answer =
+          document
+            .getElementById(
+              'rec-answer'
+            )
+            ?.value;
 
-      document
-        .getElementById('rec-step2')
-        .classList.remove('hidden');
+        const newPassword =
+          document
+            .getElementById(
+              'rec-newpass'
+            )
+            ?.value;
 
-      rec1.classList.add('hidden');
-      rec2.classList.remove('hidden');
+        const errorElement =
+          document.getElementById(
+            'recover-error'
+          );
 
-      errorEl.textContent = '';
+        const successElement =
+          document.getElementById(
+            'recover-ok'
+          );
 
-    } catch (err) {
-      errorEl.textContent = err.message;
-    }
-  });
+        try {
 
-  rec2.addEventListener('click', async () => {
-    const username =
-      document.getElementById('rec-username').value;
+          await auth.recoverPassword({
+            username,
+            answer,
+            newPassword
+          });
 
-    const answer =
-      document.getElementById('rec-answer').value;
+          if (errorElement) {
+            errorElement.textContent = '';
+          }
 
-    const newPassword =
-      document.getElementById('rec-newpass').value;
+          if (successElement) {
 
-    const errorEl =
-      document.getElementById('recover-error');
+            successElement.textContent =
+              getLang() === 'en'
+                ? 'Password updated. You can sign in now.'
+                : 'Contraseña actualizada. Ya puedes entrar.';
 
-    const okEl =
-      document.getElementById('recover-ok');
+            setTimeout(() => {
 
-    try {
-      await auth.recoverPassword({
-        username,
-        answer,
-        newPassword
-      });
+              document
+                .querySelector(
+                  '[data-goto="login"]'
+                )
+                ?.click();
 
-      errorEl.textContent = '';
+              successElement.textContent = '';
 
-      okEl.textContent =
-        getLang() === 'en'
-          ? 'Password updated. You can sign in now.'
-          : 'Contraseña actualizada. Ya puedes entrar.';
+            }, 1600);
+          }
 
-      setTimeout(() => {
-        document
-          .querySelector('[data-goto="login"]')
-          ?.click();
+        } catch (error) {
 
-        okEl.textContent = '';
-      }, 1600);
-
-    } catch (err) {
-      errorEl.textContent = err.message;
-    }
-  });
+          if (errorElement) {
+            errorElement.textContent =
+              error.message;
+          }
+        }
+      }
+    );
+  }
 }
 
+
+// ============================================================
+// LIMPIAR ERRORES
+// ============================================================
+
 function clearAuthErrors() {
+
   [
     'login-error',
     'register-error',
     'recover-error',
     'recover-ok'
   ].forEach(id => {
-    const element = document.getElementById(id);
+
+    const element =
+      document.getElementById(id);
 
     if (element) {
       element.textContent = '';
@@ -303,79 +543,124 @@ function clearAuthErrors() {
   });
 }
 
+
 // ============================================================
-// LOCK SCREEN
+// BLOQUEO POR INACTIVIDAD
 // ============================================================
 
 function wireUnlockForm() {
-  document
-    .getElementById('form-unlock')
-    .addEventListener('submit', async e => {
-      e.preventDefault();
+
+  const unlockForm =
+    document.getElementById(
+      'form-unlock'
+    );
+
+  if (!unlockForm) return;
+
+  unlockForm.addEventListener(
+    'submit',
+    async event => {
+
+      event.preventDefault();
 
       const user =
         auth.getCurrentUser();
 
       const password =
-        document.getElementById('unlock-password').value;
+        document
+          .getElementById(
+            'unlock-password'
+          )
+          ?.value;
 
-      const errorEl =
-        document.getElementById('unlock-error');
+      const errorElement =
+        document.getElementById(
+          'unlock-error'
+        );
 
       if (!user) {
-        showScreen('screen-auth');
+
+        showScreen(
+          'screen-auth'
+        );
+
         return;
       }
 
       try {
+
         await auth.loginUser({
           username: user.username,
           password,
           remember: true
         });
 
-        errorEl.textContent = '';
+        if (errorElement) {
+          errorElement.textContent = '';
+        }
 
-        document.getElementById(
-          'unlock-password'
-        ).value = '';
+        const passwordInput =
+          document.getElementById(
+            'unlock-password'
+          );
 
-        showScreen('screen-app');
+        if (passwordInput) {
+          passwordInput.value = '';
+        }
+
+        showScreen(
+          'screen-app'
+        );
 
         resetInactivityTimer();
 
-      } catch (err) {
-        errorEl.textContent = err.message;
+      } catch (error) {
+
+        if (errorElement) {
+          errorElement.textContent =
+            error.message;
+        }
       }
-    });
+    }
+  );
 }
 
-function resetInactivityTimer() {
-  if (inactivityTimer) {
-    clearTimeout(inactivityTimer);
-  }
 
-  /*
-   * getSettings() obtiene la configuración del usuario actual.
-   */
+function resetInactivityTimer() {
+
+  if (inactivityTimer) {
+    clearTimeout(
+      inactivityTimer
+    );
+  }
 
   const settings =
     getSettings();
 
   const minutes =
-    settings.inactivityLockMinutes;
+    Number(
+      settings.inactivityLockMinutes
+    );
 
   if (!minutes || minutes <= 0) {
     return;
   }
 
-  inactivityTimer = setTimeout(() => {
-    showScreen('screen-lock');
-    applyTranslations();
-  }, minutes * 60 * 1000);
+  inactivityTimer =
+    setTimeout(() => {
+
+      showScreen(
+        'screen-lock'
+      );
+
+      applyTranslations();
+
+    }, minutes * 60 * 1000);
 }
 
+
 function wireInactivityWatchers() {
+
   if (inactivityWatchersInstalled) {
     return;
   }
@@ -389,20 +674,28 @@ function wireInactivityWatchers() {
     'scroll',
     'touchstart'
   ].forEach(eventName => {
+
     document.addEventListener(
       eventName,
       () => {
+
         const appScreen =
-          document.getElementById('screen-app');
+          document.getElementById(
+            'screen-app'
+          );
 
         if (
           appScreen &&
-          !appScreen.classList.contains('hidden')
+          !appScreen.classList.contains(
+            'hidden'
+          )
         ) {
           resetInactivityTimer();
         }
       },
-      { passive: true }
+      {
+        passive: true
+      }
     );
   });
 
@@ -412,17 +705,28 @@ function wireInactivityWatchers() {
   );
 }
 
+
 // ============================================================
-// ENTRAR A LA APLICACIÓN
+// ENTRAR A LA APP
 // ============================================================
 
 function enterApp() {
+
   const user =
     auth.getCurrentUser();
 
+  if (!user) {
+
+    showScreen(
+      'screen-auth'
+    );
+
+    return;
+  }
+
   /*
-   * IMPORTANTE:
-   * Esta configuración pertenece únicamente al usuario actual.
+   * getSettings() obtiene exclusivamente
+   * los datos del usuario actualmente conectado.
    */
 
   const settings =
@@ -433,7 +737,7 @@ function enterApp() {
   );
 
   setLang(
-    settings.lang || getLang()
+    settings.lang || 'es'
   );
 
   const brandName =
@@ -442,6 +746,7 @@ function enterApp() {
     );
 
   if (brandName) {
+
     brandName.textContent =
       settings.coupleName ||
       'Nuestro Álbum';
@@ -453,51 +758,90 @@ function enterApp() {
     );
 
   if (welcome) {
+
     welcome.textContent =
-      user
-        ? `${t('welcomeTitle')}, ${user.displayName}`
-        : t('welcomeTitle');
+      `${t('welcomeTitle')}, ${
+        user.displayName ||
+        user.username
+      }`;
   }
 
-  showScreen('screen-app');
+  showScreen(
+    'screen-app'
+  );
 
   applyTranslations();
 
   wireNav();
   wireTopbar();
 
-  initPlayer();
+  if (!playerInitialized) {
+
+    initPlayer();
+
+    playerInitialized = true;
+  }
 
   resetInactivityTimer();
 
   wireInactivityWatchers();
 
-  navigateTo('dashboard');
+  navigateTo(
+    'dashboard'
+  );
 }
+
 
 // ============================================================
 // NAVEGACIÓN
 // ============================================================
 
 function wireNav() {
+
+  if (navInstalled) {
+    return;
+  }
+
+  navInstalled = true;
+
   const sidebar =
-    document.getElementById('sidebar');
+    document.getElementById(
+      'sidebar'
+    );
 
   const backdrop =
-    document.getElementById('sidebar-backdrop');
+    document.getElementById(
+      'sidebar-backdrop'
+    );
 
   function closeSidebar() {
-    sidebar?.classList.remove('open');
-    backdrop?.classList.remove('show');
+
+    sidebar?.classList.remove(
+      'open'
+    );
+
+    backdrop?.classList.remove(
+      'show'
+    );
   }
 
   document
-    .querySelectorAll('.nav-item')
-    .forEach(btn => {
-      btn.addEventListener('click', () => {
-        navigateTo(btn.dataset.view);
-        closeSidebar();
-      });
+    .querySelectorAll(
+      '.nav-item'
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        'click',
+        () => {
+
+          navigateTo(
+            button.dataset.view
+          );
+
+          closeSidebar();
+        }
+      );
     });
 
   backdrop?.addEventListener(
@@ -505,9 +849,14 @@ function wireNav() {
     closeSidebar
   );
 
-  document
-    .getElementById('btn-logout')
-    .addEventListener('click', () => {
+  const logoutButton =
+    document.getElementById(
+      'btn-logout'
+    );
+
+  logoutButton?.addEventListener(
+    'click',
+    () => {
 
       if (
         activeView &&
@@ -517,7 +866,11 @@ function wireNav() {
       }
 
       if (inactivityTimer) {
-        clearTimeout(inactivityTimer);
+
+        clearTimeout(
+          inactivityTimer
+        );
+
         inactivityTimer = null;
       }
 
@@ -527,23 +880,41 @@ function wireNav() {
 
       activeView = null;
 
-      showScreen('screen-auth');
+      showScreen(
+        'screen-auth'
+      );
 
       document
-        .querySelector('[data-goto="login"]')
+        .querySelector(
+          '[data-goto="login"]'
+        )
         ?.click();
 
       applyTranslations();
-    });
+    }
+  );
 }
 
+
+// ============================================================
+// BARRA SUPERIOR
+// ============================================================
+
 function wireTopbar() {
+
+  if (topbarInstalled) {
+    return;
+  }
+
+  topbarInstalled = true;
+
   const langSelect =
     document.getElementById(
       'lang-switch'
     );
 
   if (langSelect) {
+
     langSelect.value =
       getLang();
 
@@ -555,20 +926,17 @@ function wireTopbar() {
           langSelect.value;
 
         /*
-         * setLang() debe guardar el idioma del usuario actual.
-         * No usamos lsSet('lang') global.
-         */
-
-        setLang(lang);
-
-        /*
-         * También guardamos el idioma dentro de settings
+         * El idioma se guarda en los settings
          * del usuario actual.
          */
 
         saveSettings({
           lang
         });
+
+        setLang(
+          lang
+        );
 
         navigateTo(
           activeView,
@@ -580,11 +948,15 @@ function wireTopbar() {
     );
   }
 
-  // ---------------- HAMBURGER ----------------
 
-  document
-    .getElementById('btn-hamburger')
-    ?.addEventListener('click', () => {
+  const hamburger =
+    document.getElementById(
+      'btn-hamburger'
+    );
+
+  hamburger?.addEventListener(
+    'click',
+    () => {
 
       const sidebar =
         document.getElementById(
@@ -595,6 +967,8 @@ function wireTopbar() {
         document.getElementById(
           'sidebar-backdrop'
         );
+
+      if (!sidebar) return;
 
       const willOpen =
         !sidebar.classList.contains(
@@ -610,11 +984,11 @@ function wireTopbar() {
         'show',
         willOpen
       );
-    });
+    }
+  );
 
-  // ---------------- ANIMATIONS ----------------
 
-  const animBtn =
+  const animButton =
     document.getElementById(
       'btn-anim-toggle'
     );
@@ -625,18 +999,20 @@ function wireTopbar() {
   if (
     settings.animations
   ) {
+
     startFx(
       settings.template
     );
   }
 
-  animBtn?.addEventListener(
+  animButton?.addEventListener(
     'click',
     () => {
 
       if (
         isFxRunning()
       ) {
+
         stopFx();
 
         saveSettings({
@@ -644,6 +1020,7 @@ function wireTopbar() {
         });
 
       } else {
+
         startFx(
           getSettings().template
         );
@@ -665,6 +1042,7 @@ function wireTopbar() {
         );
 
       if (title) {
+
         title.textContent =
           t(
             navKeyFor(
@@ -676,12 +1054,15 @@ function wireTopbar() {
   );
 }
 
+
 // ============================================================
-// TRADUCCIONES DE NAVEGACIÓN
+// TRADUCCIONES
 // ============================================================
 
 function navKeyFor(view) {
+
   return {
+
     dashboard: 'navDashboard',
     calendar: 'navCalendar',
     timeline: 'navTimeline',
@@ -689,17 +1070,20 @@ function navKeyFor(view) {
     notes: 'navNotes',
     gallery: 'navGallery',
     settings: 'navSettings'
+
   }[view] || 'navDashboard';
 }
 
+
 // ============================================================
-// NAVEGAR A UNA VISTA
+// NAVEGAR
 // ============================================================
 
 function navigateTo(
   view,
   silent = false
 ) {
+
   if (!VIEWS[view]) {
     view = 'dashboard';
   }
@@ -708,21 +1092,28 @@ function navigateTo(
     activeView &&
     VIEWS[activeView]?.destroy
   ) {
+
     VIEWS[activeView].destroy();
   }
 
   document
-    .querySelectorAll('.nav-item')
-    .forEach(btn => {
-      btn.classList.toggle(
+    .querySelectorAll(
+      '.nav-item'
+    )
+    .forEach(button => {
+
+      button.classList.toggle(
         'active',
-        btn.dataset.view === view
+        button.dataset.view === view
       );
     });
 
   document
-    .querySelectorAll('.view')
+    .querySelectorAll(
+      '.view'
+    )
     .forEach(section => {
+
       section.classList.remove(
         'active'
       );
@@ -747,25 +1138,37 @@ function navigateTo(
     );
 
   if (title) {
+
     title.textContent =
       t(
-        navKeyFor(view)
+        navKeyFor(
+          view
+        )
       );
   }
 
   activeView =
     view;
 
-  VIEWS[view].init(
-    section
-  );
+  if (
+    typeof VIEWS[view].init ===
+    'function'
+  ) {
+
+    VIEWS[view].init(
+      section
+    );
+  }
 
   if (!silent) {
+
     window.scrollTo({
-      top: 0
+      top: 0,
+      behavior: 'smooth'
     });
   }
 }
+
 
 // ============================================================
 // INICIO
@@ -775,19 +1178,21 @@ window.addEventListener(
   'DOMContentLoaded',
   () => {
 
-    setTimeout(() => {
+    setTimeout(
+      () => {
 
-      document
-        .getElementById(
-          'screen-loading'
-        )
-        ?.classList.add(
-          'hidden'
-        );
+        document
+          .getElementById(
+            'screen-loading'
+          )
+          ?.classList.add(
+            'hidden'
+          );
 
-      boot();
+        boot();
 
-    }, 350);
+      },
+      350
+    );
   }
 );
-```
