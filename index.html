@@ -1,349 +1,167 @@
 <!DOCTYPE html>
 <html lang="es" data-theme="rosa">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">11
-<meta name="theme-color" content="#C1798A">
 
-<title>Nuestro Álbum</title>
+  <meta charset="UTF-8">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="css/reset.css">
-<link rel="stylesheet" href="css/themes.css">
-<link rel="stylesheet" href="css/main.css">
+  <meta
+    name="theme-color"
+    content="#C1798A">
 
-<script>
-  // Aplica el tema guardado antes de pintar la página,
-  // evitando un parpadeo con el tema por defecto.
-  (function () {
-    try {
-      var raw = localStorage.getItem('album_settings');
+  <title>Nuestro Álbum</title>
 
-      if (raw) {
-        var settings = JSON.parse(raw);
 
-        if (settings && settings.theme) {
-          document.documentElement.setAttribute(
-            'data-theme',
+  <!-- Fuentes -->
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com">
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin>
+
+
+  <!-- Estilos -->
+
+  <link
+    rel="stylesheet"
+    href="css/reset.css">
+
+  <link
+    rel="stylesheet"
+    href="css/themes.css">
+
+  <link
+    rel="stylesheet"
+    href="css/main.css">
+
+
+  <!-- Aplicar tema guardado -->
+
+  <script>
+
+    (function () {
+
+      try {
+
+        var raw =
+          localStorage.getItem('album_settings');
+
+        if (raw) {
+
+          var settings =
+            JSON.parse(raw);
+
+          if (
+            settings &&
             settings.theme
-          );
+          ) {
+
+            document.documentElement.setAttribute(
+              'data-theme',
+              settings.theme
+            );
+
+          }
+
         }
+
+      } catch (e) {
+
+        // Se mantiene el tema por defecto.
+
       }
-    } catch (e) {
-      // Si ocurre un error, se mantiene el tema por defecto.
-    }
-  })();
-</script>
+
+    })();
+
+  </script>
 
 </head>
 
+
 <body>
 
-<!-- ===================== PANTALLA DE CARGA ===================== -->
 
-<div id="screen-loading" class="screen screen-loading">
+  <!-- ===================== PANTALLA DE CARGA ===================== -->
 
-  <div class="thread-mark" aria-hidden="true"></div>
+  <div
+    id="screen-loading"
+    class="screen screen-loading">
 
-  <p data-i18n="loading">
-    Preparando vuestros recuerdos…
-  </p>
-
-</div>
-
-
-<!-- ===================== AUTENTICACIÓN ===================== -->
-
-<div id="screen-auth" class="screen screen-auth hidden">
-
-  <div class="auth-card">
-
-    <div class="auth-mark" aria-hidden="true">
-      ✦
+    <div
+      class="thread-mark"
+      aria-hidden="true">
     </div>
 
-    <h1
-      class="auth-title"
-      id="auth-welcome"
-      data-i18n="welcomeTitle">
-      Bienvenidos de nuevo
-    </h1>
-
-    <p
-      class="auth-sub"
-      data-i18n="welcomeSub">
-      Vuestra historia os espera
+    <p data-i18n="loading">
+      Preparando vuestros recuerdos…
     </p>
 
+  </div>
 
-    <!-- LOGIN -->
 
-    <form
-      id="form-login"
-      class="auth-form">
+  <!-- ===================== AUTENTICACIÓN ===================== -->
 
-      <label class="field">
+  <div
+    id="screen-auth"
+    class="screen screen-auth hidden">
 
-        <span data-i18n="username">
-          Usuario
-        </span>
 
-        <input
-          type="text"
-          id="login-username"
-          autocomplete="username"
-          required>
-
-      </label>
-
-
-      <label class="field">
-
-        <span data-i18n="password">
-          Contraseña
-        </span>
-
-        <input
-          type="password"
-          id="login-password"
-          autocomplete="current-password"
-          required>
-
-      </label>
-
-
-      <label class="checkbox-field">
-
-        <input
-          type="checkbox"
-          id="login-remember"
-          checked>
-
-        <span data-i18n="staySignedIn">
-          Mantener sesión iniciada
-        </span>
-
-      </label>
-
-
-      <p
-        class="auth-error"
-        id="login-error">
-      </p>
-
-
-      <button
-        type="submit"
-        class="btn btn-primary"
-        data-i18n="signIn">
-
-        Entrar
-
-      </button>
-
-
-      <div class="auth-links">
-
-        <button
-          type="button"
-          class="link-btn"
-          data-goto="register"
-          data-i18n="createAccount">
-
-          Crear cuenta
-
-        </button>
-
-
-        <button
-          type="button"
-          class="link-btn"
-          data-goto="recover"
-          data-i18n="forgotPassword">
-
-          Olvidé mi contraseña
-
-        </button>
-
-      </div>
-
-    </form>
-
-
-    <!-- REGISTRO -->
-
-    <form
-      id="form-register"
-      class="auth-form hidden">
-
-
-      <label class="field">
-
-        <span data-i18n="displayName">
-          Vuestro nombre / apodo
-        </span>
-
-        <input
-          type="text"
-          id="reg-displayname"
-          required
-          maxlength="60">
-
-      </label>
-
-
-      <label class="field">
-
-        <span data-i18n="username">
-          Usuario
-        </span>
-
-        <input
-          type="text"
-          id="reg-username"
-          autocomplete="username"
-          required
-          minlength="3"
-          maxlength="30">
-
-      </label>
-
-
-      <label class="field">
-
-        <span data-i18n="password">
-          Contraseña
-        </span>
-
-        <input
-          type="password"
-          id="reg-password"
-          autocomplete="new-password"
-          required
-          minlength="6">
-
-      </label>
-
-
-      <label class="field">
-
-        <span data-i18n="confirmPassword">
-          Confirmar contraseña
-        </span>
-
-        <input
-          type="password"
-          id="reg-password2"
-          autocomplete="new-password"
-          required
-          minlength="6">
-
-      </label>
-
-
-      <label class="field">
-
-        <span data-i18n="securityQuestion">
-          Pregunta de seguridad
-        </span>
-
-        <input
-          type="text"
-          id="reg-secquestion"
-          required
-          placeholder="¿Dónde fue vuestra primera cita?">
-
-      </label>
-
-
-      <label class="field">
-
-        <span data-i18n="securityAnswer">
-          Respuesta
-        </span>
-
-        <input
-          type="text"
-          id="reg-secanswer"
-          required>
-
-      </label>
-
-
-      <p
-        class="auth-error"
-        id="register-error">
-      </p>
-
-
-      <button
-        type="submit"
-        class="btn btn-primary"
-        data-i18n="createAccount">
-
-        Crear cuenta
-
-      </button>
-
-
-      <div class="auth-links">
-
-        <button
-          type="button"
-          class="link-btn"
-          data-goto="login"
-          data-i18n="backToLogin">
-
-          Volver a entrar
-
-        </button>
-
-      </div>
-
-    </form>
-
-
-    <!-- RECUPERAR -->
-
-    <form
-      id="form-recover"
-      class="auth-form hidden">
-
-
-      <label class="field">
-
-        <span data-i18n="username">
-          Usuario
-        </span>
-
-        <input
-          type="text"
-          id="rec-username"
-          required>
-
-      </label>
+    <div class="auth-card">
 
 
       <div
-        id="rec-step2"
-        class="hidden">
+        class="auth-mark"
+        aria-hidden="true">
+
+        ✦
+
+      </div>
+
+
+      <h1
+        class="auth-title"
+        id="auth-welcome"
+        data-i18n="welcomeTitle">
+
+        Bienvenidos de nuevo
+
+      </h1>
+
+
+      <p
+        class="auth-sub"
+        data-i18n="welcomeSub">
+
+        Vuestra historia os espera
+
+      </p>
+
+
+      <!-- LOGIN -->
+
+      <form
+        id="form-login"
+        class="auth-form">
 
 
         <label class="field">
 
-          <span
-            id="rec-question-label"
-            data-i18n="securityQuestion">
-
-            Pregunta de seguridad
-
+          <span data-i18n="username">
+            Usuario
           </span>
 
           <input
             type="text"
-            id="rec-answer"
+            id="login-username"
+            autocomplete="username"
             required>
 
         </label>
@@ -351,551 +169,806 @@
 
         <label class="field">
 
-          <span data-i18n="newPassword">
-            Nueva contraseña
+          <span data-i18n="password">
+            Contraseña
           </span>
 
           <input
             type="password"
-            id="rec-newpass"
+            id="login-password"
+            autocomplete="current-password"
+            required>
+
+        </label>
+
+
+        <label class="checkbox-field">
+
+          <input
+            type="checkbox"
+            id="login-remember"
+            checked>
+
+          <span data-i18n="staySignedIn">
+            Mantener sesión iniciada
+          </span>
+
+        </label>
+
+
+        <p
+          class="auth-error"
+          id="login-error">
+        </p>
+
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          data-i18n="signIn">
+
+          Entrar
+
+        </button>
+
+
+        <div class="auth-links">
+
+
+          <button
+            type="button"
+            class="link-btn"
+            data-goto="register"
+            data-i18n="createAccount">
+
+            Crear cuenta
+
+          </button>
+
+
+          <button
+            type="button"
+            class="link-btn"
+            data-goto="recover"
+            data-i18n="forgotPassword">
+
+            Olvidé mi contraseña
+
+          </button>
+
+
+        </div>
+
+      </form>
+
+
+      <!-- REGISTRO -->
+
+      <form
+        id="form-register"
+        class="auth-form hidden">
+
+
+        <label class="field">
+
+          <span data-i18n="displayName">
+            Vuestro nombre / apodo
+          </span>
+
+          <input
+            type="text"
+            id="reg-displayname"
+            required
+            maxlength="60">
+
+        </label>
+
+
+        <label class="field">
+
+          <span data-i18n="username">
+            Usuario
+          </span>
+
+          <input
+            type="text"
+            id="reg-username"
+            autocomplete="username"
+            required
+            minlength="3"
+            maxlength="30">
+
+        </label>
+
+
+        <label class="field">
+
+          <span data-i18n="password">
+            Contraseña
+          </span>
+
+          <input
+            type="password"
+            id="reg-password"
+            autocomplete="new-password"
+            required
             minlength="6">
 
         </label>
 
-      </div>
+
+        <label class="field">
+
+          <span data-i18n="confirmPassword">
+            Confirmar contraseña
+          </span>
+
+          <input
+            type="password"
+            id="reg-password2"
+            autocomplete="new-password"
+            required
+            minlength="6">
+
+        </label>
 
 
-      <p
-        class="auth-error"
-        id="recover-error">
-      </p>
+        <label class="field">
+
+          <span data-i18n="securityQuestion">
+            Pregunta de seguridad
+          </span>
+
+          <input
+            type="text"
+            id="reg-secquestion"
+            required
+            placeholder="¿Dónde fue vuestra primera cita?">
+
+        </label>
 
 
-      <p
-        class="auth-ok"
-        id="recover-ok">
-      </p>
+        <label class="field">
+
+          <span data-i18n="securityAnswer">
+            Respuesta
+          </span>
+
+          <input
+            type="text"
+            id="reg-secanswer"
+            required>
+
+        </label>
 
 
-      <button
-        type="button"
-        id="rec-step1-btn"
-        class="btn btn-primary"
-        data-i18n="continueBtn">
-
-        Continuar
-
-      </button>
+        <p
+          class="auth-error"
+          id="register-error">
+        </p>
 
 
-      <button
-        type="button"
-        id="rec-step2-btn"
-        class="btn btn-primary hidden"
-        data-i18n="resetPassword">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          data-i18n="createAccount">
 
-        Restablecer contraseña
+          Crear cuenta
 
-      </button>
+        </button>
 
 
-      <div class="auth-links">
+        <div class="auth-links">
+
+          <button
+            type="button"
+            class="link-btn"
+            data-goto="login"
+            data-i18n="backToLogin">
+
+            Volver a entrar
+
+          </button>
+
+        </div>
+
+      </form>
+
+
+      <!-- RECUPERAR -->
+
+      <form
+        id="form-recover"
+        class="auth-form hidden">
+
+
+        <label class="field">
+
+          <span data-i18n="username">
+            Usuario
+          </span>
+
+          <input
+            type="text"
+            id="rec-username"
+            required>
+
+        </label>
+
+
+        <div
+          id="rec-step2"
+          class="hidden">
+
+
+          <label class="field">
+
+            <span
+              id="rec-question-label"
+              data-i18n="securityQuestion">
+
+              Pregunta de seguridad
+
+            </span>
+
+
+            <input
+              type="text"
+              id="rec-answer"
+              required>
+
+          </label>
+
+
+          <label class="field">
+
+            <span data-i18n="newPassword">
+              Nueva contraseña
+            </span>
+
+
+            <input
+              type="password"
+              id="rec-newpass"
+              minlength="6">
+
+          </label>
+
+        </div>
+
+
+        <p
+          class="auth-error"
+          id="recover-error">
+        </p>
+
+
+        <p
+          class="auth-ok"
+          id="recover-ok">
+        </p>
+
 
         <button
           type="button"
-          class="link-btn"
-          data-goto="login"
-          data-i18n="backToLogin">
+          id="rec-step1-btn"
+          class="btn btn-primary"
+          data-i18n="continueBtn">
 
-          Volver a entrar
+          Continuar
 
         </button>
-
-      </div>
-
-    </form>
-
-  </div>
-
-</div>
-
-
-<!-- ===================== BLOQUEO POR INACTIVIDAD ===================== -->
-
-<div
-  id="screen-lock"
-  class="screen screen-lock hidden">
-
-  <div class="auth-card">
-
-    <div
-      class="auth-mark"
-      aria-hidden="true">
-
-      🔒
-
-    </div>
-
-
-    <h1
-      class="auth-title"
-      data-i18n="lockedTitle">
-
-      Sesión bloqueada
-
-    </h1>
-
-
-    <p
-      class="auth-sub"
-      data-i18n="lockedSub">
-
-      Introduce tu contraseña para continuar
-
-    </p>
-
-
-    <form
-      id="form-unlock"
-      class="auth-form">
-
-
-      <label class="field">
-
-        <span data-i18n="password">
-          Contraseña
-        </span>
-
-        <input
-          type="password"
-          id="unlock-password"
-          required
-          autocomplete="current-password">
-
-      </label>
-
-
-      <p
-        class="auth-error"
-        id="unlock-error">
-      </p>
-
-
-      <button
-        type="submit"
-        class="btn btn-primary"
-        data-i18n="unlock">
-
-        Desbloquear
-
-      </button>
-
-    </form>
-
-  </div>
-
-</div>
-
-
-<!-- ===================== APP PRINCIPAL ===================== -->
-
-<div
-  id="screen-app"
-  class="screen screen-app hidden">
-
-
-  <aside
-    class="sidebar"
-    id="sidebar">
-
-
-    <div class="brand">
-
-      <span class="brand-mark">
-        ✦
-      </span>
-
-      <span
-        class="brand-name"
-        id="brand-couple-name">
-
-        Nuestro Álbum
-
-      </span>
-
-    </div>
-
-
-    <nav
-      class="nav"
-      id="main-nav">
-
-
-      <button
-        class="nav-item active"
-        data-view="dashboard">
-
-        <span class="nav-ic">
-          ⌂
-        </span>
-
-        <span data-i18n="navDashboard">
-          Inicio
-        </span>
-
-      </button>
-
-
-      <button
-        class="nav-item"
-        data-view="calendar">
-
-        <span class="nav-ic">
-          ▦
-        </span>
-
-        <span data-i18n="navCalendar">
-          Calendario
-        </span>
-
-      </button>
-
-
-      <button
-        class="nav-item"
-        data-view="timeline">
-
-        <span class="nav-ic">
-          〜
-        </span>
-
-        <span data-i18n="navTimeline">
-          Nuestra Historia
-        </span>
-
-      </button>
-
-
-      <button
-        class="nav-item"
-        data-view="events">
-
-        <span class="nav-ic">
-          ✧
-        </span>
-
-        <span data-i18n="navEvents">
-          Eventos
-        </span>
-
-      </button>
-
-
-      <button
-        class="nav-item"
-        data-view="notes">
-
-        <span class="nav-ic">
-          ✎
-        </span>
-
-        <span data-i18n="navNotes">
-          Notas
-        </span>
-
-      </button>
-
-
-      <button
-        class="nav-item"
-        data-view="gallery">
-
-        <span class="nav-ic">
-          ▣
-        </span>
-
-        <span data-i18n="navGallery">
-          Galería
-        </span>
-
-      </button>
-
-
-      <button
-        class="nav-item"
-        data-view="settings">
-
-        <span class="nav-ic">
-          ⚙
-        </span>
-
-        <span data-i18n="navSettings">
-          Ajustes
-        </span>
-
-      </button>
-
-    </nav>
-
-
-    <button
-      class="btn btn-ghost logout-btn"
-      id="btn-logout"
-      data-i18n="signOut">
-
-      Cerrar sesión
-
-    </button>
-
-  </aside>
-
-
-  <div
-    class="sidebar-backdrop"
-    id="sidebar-backdrop">
-  </div>
-
-
-  <main
-    class="content"
-    id="content">
-
-
-    <header
-      class="topbar">
-
-
-      <button
-        class="hamburger"
-        id="btn-hamburger"
-        aria-label="Menú">
-
-        ☰
-
-      </button>
-
-
-      <h2
-        class="view-title"
-        id="view-title"
-        data-i18n="navDashboard">
-
-        Inicio
-
-      </h2>
-
-
-      <div
-        class="topbar-actions">
-
-
-        <select
-          id="lang-switch"
-          class="lang-switch"
-          aria-label="Idioma">
-
-          <option value="es">
-            ES
-          </option>
-
-          <option value="en">
-            EN
-          </option>
-
-        </select>
 
 
         <button
-          class="icon-btn"
-          id="btn-anim-toggle"
-          title="Animaciones">
+          type="button"
+          id="rec-step2-btn"
+          class="btn btn-primary hidden"
+          data-i18n="resetPassword">
 
-          ✨
+          Restablecer contraseña
 
         </button>
 
-      </div>
 
-    </header>
+        <div class="auth-links">
 
+          <button
+            type="button"
+            class="link-btn"
+            data-goto="login"
+            data-i18n="backToLogin">
 
-    <section
-      id="view-dashboard"
-      class="view active">
-    </section>
+            Volver a entrar
 
+          </button>
 
-    <section
-      id="view-calendar"
-      class="view">
-    </section>
+        </div>
 
+      </form>
 
-    <section
-      id="view-timeline"
-      class="view">
-    </section>
-
-
-    <section
-      id="view-events"
-      class="view">
-    </section>
-
-
-    <section
-      id="view-notes"
-      class="view">
-    </section>
-
-
-    <section
-      id="view-gallery"
-      class="view">
-    </section>
-
-
-    <section
-      id="view-settings"
-      class="view">
-    </section>
-
-  </main>
-
-</div>
-
-
-<!-- ===================== REPRODUCTOR GLOBAL ===================== -->
-
-<div
-  id="music-player"
-  class="music-player hidden">
-
-
-  <button
-    id="mp-toggle"
-    class="mp-toggle">
-
-    ▶
-
-  </button>
-
-
-  <div
-    class="mp-info">
-
-
-    <span
-      id="mp-track-name"
-      class="mp-track-name"
-      data-i18n="noTrack">
-
-      Sin música
-
-    </span>
-
-
-    <input
-      id="mp-seek"
-      type="range"
-      min="0"
-      max="100"
-      value="0"
-      class="mp-seek">
+    </div>
 
   </div>
 
 
-  <button
-    id="mp-shuffle"
-    class="icon-btn small"
-    title="Aleatorio">
+  <!-- ===================== BLOQUEO ===================== -->
 
-    ⤨
-
-  </button>
+  <div
+    id="screen-lock"
+    class="screen screen-lock hidden">
 
 
-  <button
-    id="mp-repeat"
-    class="icon-btn small"
-    title="Repetir">
-
-    ↻
-
-  </button>
+    <div class="auth-card">
 
 
-  <input
-    id="mp-volume"
-    type="range"
-    min="0"
-    max="1"
-    step="0.01"
-    value="0.7"
-    class="mp-volume">
+      <div
+        class="auth-mark"
+        aria-hidden="true">
+
+        🔒
+
+      </div>
 
 
-  <button
-    id="mp-list"
-    class="icon-btn small"
-    title="Playlist">
+      <h1
+        class="auth-title"
+        data-i18n="lockedTitle">
 
-    ♫
+        Sesión bloqueada
 
-  </button>
-
-
-  <audio
-    id="mp-audio">
-  </audio>
-
-</div>
+      </h1>
 
 
-<!-- ===================== OVERLAY DE ANIMACIONES ===================== -->
+      <p
+        class="auth-sub"
+        data-i18n="lockedSub">
 
-<canvas
-  id="fx-canvas"
-  class="fx-canvas hidden">
-</canvas>
+        Introduce tu contraseña para continuar
 
-
-<!-- ===================== CONTENEDOR DE MODALES ===================== -->
-
-<div
-  id="modal-root">
-</div>
+      </p>
 
 
-<!-- ===================== CONTENEDOR DE TOASTS ===================== -->
-
-<div
-  id="toast-root"
-  class="toast-root">
-</div>
+      <form
+        id="form-unlock"
+        class="auth-form">
 
 
-<!-- ===================== SUPABASE ===================== -->
+        <label class="field">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+          <span data-i18n="password">
+            Contraseña
+          </span>
 
-<script src="js/supabase-config.js"></script>
 
-1
-<!-- ===================== JAVASCRIPT DE LA APLICACIÓN ===================== -->
+          <input
+            type="password"
+            id="unlock-password"
+            required
+            autocomplete="current-password">
 
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        </label>
 
-<!-- Configuración de Supabase -->
-<script src="js/supabase-config.js"></script>
 
-<!-- Autenticación -->
-<script src="js/auth.js"></script>
+        <p
+          class="auth-error"
+          id="unlock-error">
+        </p>
 
-<!-- JavaScript principal de la aplicación -->
-<script src="js/bundle.js"></script>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          data-i18n="unlock">
+
+          Desbloquear
+
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+  <!-- ===================== APP PRINCIPAL ===================== -->
+
+  <div
+    id="screen-app"
+    class="screen screen-app hidden">
+
+
+    <aside
+      class="sidebar"
+      id="sidebar">
+
+
+      <div class="brand">
+
+        <span class="brand-mark">
+          ✦
+        </span>
+
+
+        <span
+          class="brand-name"
+          id="brand-couple-name">
+
+          Nuestro Álbum
+
+        </span>
+
+      </div>
+
+
+      <nav
+        class="nav"
+        id="main-nav">
+
+
+        <button
+          class="nav-item active"
+          data-view="dashboard">
+
+          <span class="nav-ic">
+            ⌂
+          </span>
+
+          <span data-i18n="navDashboard">
+            Inicio
+          </span>
+
+        </button>
+
+
+        <button
+          class="nav-item"
+          data-view="calendar">
+
+          <span class="nav-ic">
+            ▦
+          </span>
+
+          <span data-i18n="navCalendar">
+            Calendario
+          </span>
+
+        </button>
+
+
+        <button
+          class="nav-item"
+          data-view="timeline">
+
+          <span class="nav-ic">
+            〜
+          </span>
+
+          <span data-i18n="navTimeline">
+            Nuestra Historia
+          </span>
+
+        </button>
+
+
+        <button
+          class="nav-item"
+          data-view="events">
+
+          <span class="nav-ic">
+            ✧
+          </span>
+
+          <span data-i18n="navEvents">
+            Eventos
+          </span>
+
+        </button>
+
+
+        <button
+          class="nav-item"
+          data-view="notes">
+
+          <span class="nav-ic">
+            ✎
+          </span>
+
+          <span data-i18n="navNotes">
+            Notas
+          </span>
+
+        </button>
+
+
+        <button
+          class="nav-item"
+          data-view="gallery">
+
+          <span class="nav-ic">
+            ▣
+          </span>
+
+          <span data-i18n="navGallery">
+            Galería
+          </span>
+
+        </button>
+
+
+        <button
+          class="nav-item"
+          data-view="settings">
+
+          <span class="nav-ic">
+            ⚙
+          </span>
+
+          <span data-i18n="navSettings">
+            Ajustes
+          </span>
+
+        </button>
+
+      </nav>
+
+
+      <button
+        class="btn btn-ghost logout-btn"
+        id="btn-logout"
+        data-i18n="signOut">
+
+        Cerrar sesión
+
+      </button>
+
+    </aside>
+
+
+    <div
+      class="sidebar-backdrop"
+      id="sidebar-backdrop">
+    </div>
+
+
+    <main
+      class="content"
+      id="content">
+
+
+      <header class="topbar">
+
+
+        <button
+          class="hamburger"
+          id="btn-hamburger"
+          aria-label="Menú">
+
+          ☰
+
+        </button>
+
+
+        <h2
+          class="view-title"
+          id="view-title"
+          data-i18n="navDashboard">
+
+          Inicio
+
+        </h2>
+
+
+        <div class="topbar-actions">
+
+
+          <select
+            id="lang-switch"
+            class="lang-switch"
+            aria-label="Idioma">
+
+            <option value="es">
+              ES
+            </option>
+
+            <option value="en">
+              EN
+            </option>
+
+          </select>
+
+
+          <button
+            class="icon-btn"
+            id="btn-anim-toggle"
+            title="Animaciones">
+
+            ✨
+
+          </button>
+
+        </div>
+
+      </header>
+
+
+      <section
+        id="view-dashboard"
+        class="view active">
+      </section>
+
+
+      <section
+        id="view-calendar"
+        class="view">
+      </section>
+
+
+      <section
+        id="view-timeline"
+        class="view">
+      </section>
+
+
+      <section
+        id="view-events"
+        class="view">
+      </section>
+
+
+      <section
+        id="view-notes"
+        class="view">
+      </section>
+
+
+      <section
+        id="view-gallery"
+        class="view">
+      </section>
+
+
+      <section
+        id="view-settings"
+        class="view">
+      </section>
+
+    </main>
+
+  </div>
+
+
+  <!-- ===================== REPRODUCTOR ===================== -->
+
+  <div
+    id="music-player"
+    class="music-player hidden">
+
+
+    <button
+      id="mp-toggle"
+      class="mp-toggle">
+
+      ▶
+
+    </button>
+
+
+    <div class="mp-info">
+
+
+      <span
+        id="mp-track-name"
+        class="mp-track-name"
+        data-i18n="noTrack">
+
+        Sin música
+
+      </span>
+
+
+      <input
+        id="mp-seek"
+        type="range"
+        min="0"
+        max="100"
+        value="0"
+        class="mp-seek">
+
+    </div>
+
+
+    <button
+      id="mp-shuffle"
+      class="icon-btn small"
+      title="Aleatorio">
+
+      ⤨
+
+    </button>
+
+
+    <button
+      id="mp-repeat"
+      class="icon-btn small"
+      title="Repetir">
+
+      ↻
+
+    </button>
+
+
+    <input
+      id="mp-volume"
+      type="range"
+      min="0"
+      max="1"
+      step="0.01"
+      value="0.7"
+      class="mp-volume">
+
+
+    <button
+      id="mp-list"
+      class="icon-btn small"
+      title="Playlist">
+
+      ♫
+
+    </button>
+
+
+    <audio
+      id="mp-audio">
+    </audio>
+
+  </div>
+
+
+  <!-- ===================== ANIMACIONES ===================== -->
+
+  <canvas
+    id="fx-canvas"
+    class="fx-canvas hidden">
+  </canvas>
+
+
+  <!-- ===================== MODALES ===================== -->
+
+  <div
+    id="modal-root">
+  </div>
+
+
+  <!-- ===================== TOASTS ===================== -->
+
+  <div
+    id="toast-root"
+    class="toast-root">
+  </div>
+
+
+  <!-- ===================== SUPABASE ===================== -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+  <!-- CONFIGURACIÓN DE SUPABASE -->
+
+  <script src="js/supabase-config.js"></script>
+
+
+  <!-- AUTENTICACIÓN -->
+
+  <script src="js/auth.js"></script>
+
+
+  <!-- JAVASCRIPT PRINCIPAL -->
+
+  <script src="js/bundle.js"></script>
+
 
 </body>
+
 </html>
