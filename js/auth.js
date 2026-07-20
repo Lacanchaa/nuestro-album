@@ -1,18 +1,7 @@
 
-Eso **no puede estar dentro de un archivo JavaScript**. Además, te dejo el `auth.js` completo corregido para:
+Eso provoca errores de sintaxis. **Borra todo el contenido actual de `auth.js` y pega únicamente este código**, sin agregar ``` al principio ni al final:
 
-- Registrar directamente en `profiles`.
-- Generar `password_hash` con PBKDF2 + salt.
-- Generar `security_answer_hash`.
-- Iniciar sesión con `username` y contraseña.
-- Guardar la sesión.
-- Restaurar la sesión.
-- Cerrar sesión.
-- Cargar los datos de `user_storage` al iniciar sesión si `syncFromSupabase` está disponible.
-
-Reemplaza **todo tu `auth.js`** por este:
-
-:::writing{variant="document" id="63927"}
+:::writing{variant="document" id="48271"}
 (function () {
   "use strict";
 
@@ -35,7 +24,9 @@ Reemplaza **todo tu `auth.js`** por este:
     crypto.getRandomValues(array);
 
     return Array.from(array)
-      .map(byte => byte.toString(16).padStart(2, "0"))
+      .map(function (byte) {
+        return byte.toString(16).padStart(2, "0");
+      })
       .join("");
   }
 
@@ -65,8 +56,12 @@ Reemplaza **todo tu `auth.js`** por este:
         256
       );
 
-    return Array.from(new Uint8Array(hash))
-      .map(byte => byte.toString(16).padStart(2, "0"))
+    return Array.from(
+      new Uint8Array(hash)
+    )
+      .map(function (byte) {
+        return byte.toString(16).padStart(2, "0");
+      })
       .join("");
   }
 
@@ -79,7 +74,7 @@ Reemplaza **todo tu `auth.js`** por este:
         salt
       );
 
-    return `${salt}:${hash}`;
+    return salt + ":" + hash;
   }
 
   async function verifyPassword(
@@ -118,13 +113,11 @@ Reemplaza **todo tu `auth.js`** por este:
 
     const hash =
       await hashValue(
-        answer
-          .trim()
-          .toLowerCase(),
+        answer.trim().toLowerCase(),
         salt
       );
 
-    return `${salt}:${hash}`;
+    return salt + ":" + hash;
   }
 
   // =====================================================
@@ -234,32 +227,6 @@ Reemplaza **todo tu `auth.js`** por este:
   }
 
   // =====================================================
-  // CARGAR DATOS DEL USUARIO DESDE SUPABASE
-  // =====================================================
-
-  async function loadUserData() {
-    try {
-      if (
-        typeof window.syncFromSupabase ===
-        "function"
-      ) {
-        await window.syncFromSupabase();
-
-        console.log(
-          "Datos del usuario sincronizados"
-        );
-      }
-    }
-
-    catch (error) {
-      console.error(
-        "Error cargando datos del usuario:",
-        error
-      );
-    }
-  }
-
-  // =====================================================
   // REGISTRO
   // =====================================================
 
@@ -271,7 +238,6 @@ Reemplaza **todo tu `auth.js`** por este:
   if (registerForm) {
     registerForm.addEventListener(
       "submit",
-
       async function (event) {
         event.preventDefault();
 
@@ -332,6 +298,14 @@ Reemplaza **todo tu `auth.js`** por este:
             "register-error"
           );
 
+        if (!errorElement) {
+          console.error(
+            "No existe register-error"
+          );
+
+          return;
+        }
+
         if (username.length < 3) {
           errorElement.textContent =
             "El usuario debe tener al menos 3 caracteres";
@@ -367,9 +341,7 @@ Reemplaza **todo tu `auth.js`** por este:
           errorElement.textContent =
             "Creando cuenta...";
 
-          // ---------------------------------------------
           // COMPROBAR USUARIO EXISTENTE
-          // ---------------------------------------------
 
           const {
             data: existingUser,
@@ -395,27 +367,21 @@ Reemplaza **todo tu `auth.js`** por este:
             return;
           }
 
-          // ---------------------------------------------
           // CREAR HASH DE CONTRASEÑA
-          // ---------------------------------------------
 
           const passwordHash =
             await createPasswordHash(
               password
             );
 
-          // ---------------------------------------------
           // CREAR HASH DE RESPUESTA
-          // ---------------------------------------------
 
           const securityAnswerHash =
             await createSecurityAnswerHash(
               secAnswer
             );
 
-          // ---------------------------------------------
           // INSERTAR EN PROFILES
-          // ---------------------------------------------
 
           const {
             data: newUser,
@@ -424,19 +390,13 @@ Reemplaza **todo tu `auth.js`** por este:
             await supabaseClient
               .from("profiles")
               .insert({
-                username:
-                  username,
-
+                username: username,
                 display_name:
-                  displayName ||
-                  username,
-
+                  displayName || username,
                 password_hash:
                   passwordHash,
-
                 security_question:
                   secQuestion,
-
                 security_answer_hash:
                   securityAnswerHash
               })
@@ -452,9 +412,7 @@ Reemplaza **todo tu `auth.js`** por este:
             newUser
           );
 
-          // ---------------------------------------------
           // GUARDAR SESIÓN
-          // ---------------------------------------------
 
           saveSession(
             newUser
@@ -464,8 +422,6 @@ Reemplaza **todo tu `auth.js`** por este:
             "";
 
           registerForm.reset();
-
-          await loadUserData();
 
           alert(
             "Cuenta creada correctamente"
@@ -500,7 +456,6 @@ Reemplaza **todo tu `auth.js`** por este:
   if (loginForm) {
     loginForm.addEventListener(
       "submit",
-
       async function (event) {
         event.preventDefault();
 
@@ -529,15 +484,19 @@ Reemplaza **todo tu `auth.js`** por este:
           !username ||
           !password
         ) {
-          errorElement.textContent =
-            "Introduce tu usuario y contraseña";
+          if (errorElement) {
+            errorElement.textContent =
+              "Introduce tu usuario y contraseña";
+          }
 
           return;
         }
 
         try {
-          errorElement.textContent =
-            "Iniciando sesión...";
+          if (errorElement) {
+            errorElement.textContent =
+              "Iniciando sesión...";
+          }
 
           const {
             data: user,
@@ -559,8 +518,10 @@ Reemplaza **todo tu `auth.js`** por este:
           }
 
           if (!user) {
-            errorElement.textContent =
-              "Usuario o contraseña incorrectos";
+            if (errorElement) {
+              errorElement.textContent =
+                "Usuario o contraseña incorrectos";
+            }
 
             return;
           }
@@ -572,8 +533,10 @@ Reemplaza **todo tu `auth.js`** por este:
             );
 
           if (!passwordCorrect) {
-            errorElement.textContent =
-              "Usuario o contraseña incorrectos";
+            if (errorElement) {
+              errorElement.textContent =
+                "Usuario o contraseña incorrectos";
+            }
 
             return;
           }
@@ -582,15 +545,15 @@ Reemplaza **todo tu `auth.js`** por este:
             user
           );
 
-          await loadUserData();
-
           console.log(
             "Inicio de sesión correcto:",
             user.username
           );
 
-          errorElement.textContent =
-            "";
+          if (errorElement) {
+            errorElement.textContent =
+              "";
+          }
 
           showApp();
         }
@@ -601,8 +564,10 @@ Reemplaza **todo tu `auth.js`** por este:
             error
           );
 
-          errorElement.textContent =
-            "Usuario o contraseña incorrectos";
+          if (errorElement) {
+            errorElement.textContent =
+              "Usuario o contraseña incorrectos";
+          }
         }
       }
     );
@@ -640,7 +605,6 @@ Reemplaza **todo tu `auth.js`** por este:
   if (logoutButton) {
     logoutButton.addEventListener(
       "click",
-
       function () {
         localStorage.removeItem(
           "loggedUser"
@@ -654,16 +618,7 @@ Reemplaza **todo tu `auth.js`** por este:
 })();
 :::
 
-### Ahora comprueba esto
+**Importante:** al pegarlo en GitHub, no copies las líneas de apertura y cierre del bloque de escritura (`:::writing...` y `:::`). Copia solamente el código que empieza en:
 
-Después de subir el archivo:
-
-1. Abre la página.
-2. Abre la consola del navegador con **F12 → Console**.
-3. Registra un usuario nuevo.
-4. Debes ver:
-
-```text
-Supabase conectado correctamente
-Botón registro presionado
-Usuario registrado: { ... }
+```javascript
+(function () { })();
