@@ -1,436 +1,325 @@
-(function () {
-  "use strict";
-
-  const supabaseClient = window.supabaseClient;
-
-  if (!supabaseClient) {
-    console.error("Supabase no está conectado");
-    return;
-  }
-
-  console.log("Supabase conectado correctamente");
-
-  function generateSalt() {
-    const array = new Uint8Array(16);
-
-    crypto.getRandomValues(array);
-
-    return Array.from(array)
-      .map(function (byte) {
-        return byte.toString(16).padStart(2, "0");
-      })
-      .join("");
-  }
-
-  async function hashValue(value, salt) {
-    const encoder = new TextEncoder();
-
-    const keyMaterial = await crypto.subtle.importKey(
-      "raw",
-      encoder.encode(value),
-      {
-        name: "PBKDF2"
-      },
-      false,
-      ["deriveBits"]
-    );
-
-    const hash = await crypto.subtle.deriveBits(
-      {
-        name: "PBKDF2",
-        salt: encoder.encode(salt),
-        iterations: 100000,
-        hash: "SHA-256"
-      },
-      keyMaterial,
-      256
-    );
-
-    return Array.from(new Uint8Array(hash))
-      .map(function (byte) {
-        return byte.toString(16).padStart(2, "0");
-      })
-      .join("");
-  }
-
-  async function createPasswordHash(password) {
-    const salt = generateSalt();
-    const hash = await hashValue(password, salt);
-
-    return salt + ":" + hash;
-  }
-
-  async function verifyPassword(password, storedHash) {
-    if (!storedHash) {
-      return false;
-    }
-
-    const parts = storedHash.split(":");
-
-    if (parts.length !== 2) {
-      return false;
-    }
-
-    const salt = parts[0];
-    const originalHash = parts[1];
-
-    const newHash = await hashValue(password, salt);
-
-    return newHash === originalHash;
-  }
-
-  async function createSecurityAnswerHash(answer) {
-    const salt = generateSalt();
-
-    const hash = await hashValue(
-      answer.trim().toLowerCase(),
-      salt
-    );
-
-    return salt + ":" + hash;
-  }
-
-  function saveSession(user) {
-    const session = {
-      id: user.id,
-      username: user.username,
-      display_name: user.display_name
-    };
-
-    localStorage.setItem(
-      "loggedUser",
-      JSON.stringify(session)
-    );
-  }
-
-  function getLoggedUser() {
-    const raw = localStorage.getItem("loggedUser");
-
-    if (!raw) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(raw);
-    } catch (error) {
-      console.error("Error leyendo sesión:", error);
-
-      localStorage.removeItem("loggedUser");
-
-      return null;
-    }
-  }
-
-  function showApp() {
-    const auth = document.getElementById("screen-auth");
-    const app = document.getElementById("screen-app");
-
-    if (auth) {
-      auth.classList.add("hidden");
-    }
-
-    if (app) {
-      app.classList.remove("hidden");
-    }
-  }
-
-  function showAuth() {
-    const auth = document.getElementById("screen-auth");
-    const app = document.getElementById("screen-app");
-
-    if (auth) {
-      auth.classList.remove("hidden");
-    }
-
-    if (app) {
-      app.classList.add("hidden");
-    }
-  }
-
-  const registerForm =
-    document.getElementById("form-register");
-
-  if (registerForm) {
-    registerForm.addEventListener(
-      "submit",
-      async function (event) {
-        event.preventDefault();
-
-        const displayName =
-          document.getElementById(
-            "reg-displayname"
-          ).value.trim();
-
-        const username =
-          document.getElementById(
-            "reg-username"
-          ).value.trim().toLowerCase();
-
-        const password =
-          document.getElementById(
-            "reg-password"
-          ).value;
-
-        const password2 =
-          document.getElementById(
-            "reg-password2"
-          ).value;
-
-        const secQuestion =
-          document.getElementById(
-            "reg-secquestion"
-          ).value.trim();
-
-        const secAnswer =
-          document.getElementById(
-            "reg-secanswer"
-          ).value.trim().toLowerCase();
-
-        const errorElement =
-          document.getElementById(
-            "register-error"
-          );
-
-        if (username.length < 3) {
-          errorElement.textContent =
-            "El usuario debe tener al menos 3 caracteres";
-
-          return;
-        }
-
-        if (password.length < 6) {
-          errorElement.textContent =
-            "La contraseña debe tener al menos 6 caracteres";
-
-          return;
-        }
-
-        if (password !== password2) {
-          errorElement.textContent =
-            "Las contraseñas no coinciden";
-
-          return;
-        }
-
-        if (!secQuestion || !secAnswer) {
-          errorElement.textContent =
-            "Completa la pregunta y respuesta de seguridad";
-
-          return;
-        }
-
-        try {
-          errorElement.textContent =
-            "Creando cuenta...";
-
-          const searchResult =
-            await supabaseClient
-              .from("profiles")
-              .select("id")
-              .eq("username", username)
-              .maybeSingle();
-
-          if (searchResult.error) {
-            throw searchResult.error;
-          }
-
-          if (searchResult.data) {
-            errorElement.textContent =
-              "Ese nombre de usuario ya está registrado";
-
-            return;
-          }
-
-          const passwordHash =
-            await createPasswordHash(password);
-
-          const securityAnswerHash =
-            await createSecurityAnswerHash(
-              secAnswer
-            );
-
-          const insertResult =
-            await supabaseClient
-              .from("profiles")
-              .insert({
-                username: username,
-                display_name:
-                  displayName || username,
-                password_hash:
-                  passwordHash,
-                security_question:
-                  secQuestion,
-                security_answer_hash:
-                  securityAnswerHash
-              })
-              .select()
-              .single();
-
-          if (insertResult.error) {
-            throw insertResult.error;
-          }
-
-          console.log(
-  "Usuario registrado correctamente:",
-  insertResult.data
-);
-
-saveSession(insertResult.data);
-
-// CREAR REGISTRO EN USER_STORAGE
-const storageResult = await supabaseClient
-  .from("user_storage")
-  .insert({
-    user_id: insertResult.data.id
-  });
-
-if (storageResult.error) {
-  console.error(
-    "Error creando user_storage:",
-    storageResult.error
+// ============================================================
+// auth.js — Autenticación con Supabase
+// ============================================================
+
+const supabaseClient = window.supabaseClient;
+
+if (!supabaseClient) {
+  throw new Error('Supabase no está conectado');
+}
+
+// ------------------------------------------------------------
+// Hash de contraseña
+// ------------------------------------------------------------
+
+function generateSalt() {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+
+  return Array.from(array)
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function hashValue(value, salt) {
+  const encoder = new TextEncoder();
+
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(value),
+    { name: 'PBKDF2' },
+    false,
+    ['deriveBits']
+  );
+
+  const hash = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: encoder.encode(salt),
+      iterations: 100000,
+      hash: 'SHA-256'
+    },
+    keyMaterial,
+    256
+  );
+
+  return Array.from(new Uint8Array(hash))
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function createPasswordHash(password) {
+  const salt = generateSalt();
+  const hash = await hashValue(password, salt);
+
+  return `${salt}:${hash}`;
+}
+
+async function verifyPassword(password, storedHash) {
+  if (!storedHash) return false;
+
+  const parts = storedHash.split(':');
+
+  if (parts.length !== 2) return false;
+
+  const salt = parts[0];
+  const originalHash = parts[1];
+
+  const newHash = await hashValue(password, salt);
+
+  return newHash === originalHash;
+}
+
+// ------------------------------------------------------------
+// Sesión
+// ------------------------------------------------------------
+
+function saveSession(user) {
+  const session = {
+    id: user.id,
+    username: user.username,
+    display_name: user.display_name
+  };
+
+  localStorage.setItem(
+    'loggedUser',
+    JSON.stringify(session)
   );
 }
 
-registerForm.reset();
+export function getLoggedUser() {
+  const raw = localStorage.getItem('loggedUser');
 
-errorElement.textContent = "";
+  if (!raw) return null;
 
-alert(
-  "Cuenta creada correctamente"
-);
+  try {
+    return JSON.parse(raw);
+  } catch {
+    localStorage.removeItem('loggedUser');
+    return null;
+  }
+}
 
-showApp();
+export function getCurrentUser() {
+  return getLoggedUser();
+}
 
-        } catch (error) {
-          console.error(
-            "Error al registrar usuario:",
-            error
-          );
+export function isAuthenticated() {
+  return !!getLoggedUser();
+}
 
-          errorElement.textContent =
-            error.message ||
-            "Error al crear la cuenta";
-        }
-      }
+export function logoutUser() {
+  localStorage.removeItem('loggedUser');
+}
+
+// ------------------------------------------------------------
+// Registro
+// ------------------------------------------------------------
+
+export async function registerUser({
+  username,
+  password,
+  displayName,
+  secQuestion,
+  secAnswer
+}) {
+  username = username.trim().toLowerCase();
+
+  if (username.length < 3) {
+    throw new Error('El usuario debe tener al menos 3 caracteres');
+  }
+
+  if (password.length < 6) {
+    throw new Error('La contraseña debe tener al menos 6 caracteres');
+  }
+
+  if (!secQuestion || !secAnswer) {
+    throw new Error('Completa la pregunta y respuesta de seguridad');
+  }
+
+  const { data: existingUser, error: searchError } =
+    await supabaseClient
+      .from('profiles')
+      .select('id')
+      .eq('username', username)
+      .maybeSingle();
+
+  if (searchError) throw searchError;
+
+  if (existingUser) {
+    throw new Error('Ese usuario ya existe');
+  }
+
+  const passwordHash =
+    await createPasswordHash(password);
+
+  const securityAnswerHash =
+    await createPasswordHash(
+      secAnswer.trim().toLowerCase()
+    );
+
+  const { data: user, error } =
+    await supabaseClient
+      .from('profiles')
+      .insert({
+        username,
+        display_name: displayName?.trim() || username,
+        password_hash: passwordHash,
+        security_question: secQuestion.trim(),
+        security_answer_hash: securityAnswerHash
+      })
+      .select()
+      .single();
+
+  if (error) throw error;
+
+  // Crear almacenamiento exclusivo para este usuario
+  const { error: storageError } =
+    await supabaseClient
+      .from('user_storage')
+      .insert({
+        user_id: user.id
+      });
+
+  if (storageError) {
+    console.error(
+      'Error creando user_storage:',
+      storageError
     );
   }
 
-  const loginForm =
-    document.getElementById("form-login");
+  saveSession(user);
 
-  if (loginForm) {
-    loginForm.addEventListener(
-      "submit",
-      async function (event) {
-        event.preventDefault();
+  return user;
+}
 
-        const username =
-          document.getElementById(
-            "login-username"
-          ).value.trim().toLowerCase();
+// ------------------------------------------------------------
+// Login
+// ------------------------------------------------------------
 
-        const password =
-          document.getElementById(
-            "login-password"
-          ).value;
+export async function loginUser({
+  username,
+  password
+}) {
+  username = username.trim().toLowerCase();
 
-        const errorElement =
-          document.getElementById(
-            "login-error"
-          );
+  const { data: user, error } =
+    await supabaseClient
+      .from('profiles')
+      .select(`
+        id,
+        username,
+        display_name,
+        password_hash
+      `)
+      .eq('username', username)
+      .maybeSingle();
 
-        if (!username || !password) {
-          errorElement.textContent =
-            "Introduce tu usuario y contraseña";
+  if (error) throw error;
 
-          return;
-        }
-
-        try {
-          errorElement.textContent =
-            "Iniciando sesión...";
-
-          const result =
-            await supabaseClient
-              .from("profiles")
-              .select(
-                "id, username, display_name, password_hash"
-              )
-              .eq("username", username)
-              .maybeSingle();
-
-          if (result.error) {
-            throw result.error;
-          }
-
-          if (!result.data) {
-            errorElement.textContent =
-              "Usuario o contraseña incorrectos";
-
-            return;
-          }
-
-          const correct =
-            await verifyPassword(
-              password,
-              result.data.password_hash
-            );
-
-          if (!correct) {
-            errorElement.textContent =
-              "Usuario o contraseña incorrectos";
-
-            return;
-          }
-
-          saveSession(result.data);
-
-          console.log(
-            "Inicio de sesión correcto:",
-            result.data.username
-          );
-
-          errorElement.textContent = "";
-
-          showApp();
-
-        } catch (error) {
-          console.error(
-            "Error al iniciar sesión:",
-            error
-          );
-
-          errorElement.textContent =
-            "Usuario o contraseña incorrectos";
-        }
-      }
+  if (!user) {
+    throw new Error(
+      'Usuario o contraseña incorrectos'
     );
   }
 
-   const loggedUser = getLoggedUser();
-
-  if (loggedUser && loggedUser.username) {
-    console.log(
-      "Sesión restaurada:",
-      loggedUser.username
+  const correct =
+    await verifyPassword(
+      password,
+      user.password_hash
     );
 
-    showApp();
-  } else {
-    showAuth();
-  }
-
-  const logoutButton =
-    document.getElementById("btn-logout");
-
-  if (logoutButton) {
-    logoutButton.addEventListener(
-      "click",
-      function () {
-        localStorage.removeItem("loggedUser");
-        showAuth();
-      }
+  if (!correct) {
+    throw new Error(
+      'Usuario o contraseña incorrectos'
     );
   }
 
-})();
+  saveSession(user);
+
+  return user;
+}
+
+// ------------------------------------------------------------
+// Pregunta de seguridad
+// ------------------------------------------------------------
+
+export async function getSecurityQuestion(username) {
+  username = username.trim().toLowerCase();
+
+  const { data, error } =
+    await supabaseClient
+      .from('profiles')
+      .select('security_question')
+      .eq('username', username)
+      .maybeSingle();
+
+  if (error) throw error;
+
+  if (!data) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  return data.security_question;
+}
+
+// ------------------------------------------------------------
+// Recuperar contraseña
+// ------------------------------------------------------------
+
+export async function recoverPassword({
+  username,
+  answer,
+  newPassword
+}) {
+  username = username.trim().toLowerCase();
+
+  if (newPassword.length < 6) {
+    throw new Error(
+      'La nueva contraseña debe tener al menos 6 caracteres'
+    );
+  }
+
+  const { data: user, error } =
+    await supabaseClient
+      .from('profiles')
+      .select(`
+        id,
+        security_answer_hash
+      `)
+      .eq('username', username)
+      .maybeSingle();
+
+  if (error) throw error;
+
+  if (!user) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  const correct =
+    await verifyPassword(
+      answer.trim().toLowerCase(),
+      user.security_answer_hash
+    );
+
+  if (!correct) {
+    throw new Error(
+      'La respuesta de seguridad no es correcta'
+    );
+  }
+
+  const newPasswordHash =
+    await createPasswordHash(newPassword);
+
+  const { error: updateError } =
+    await supabaseClient
+      .from('profiles')
+      .update({
+        password_hash: newPasswordHash
+      })
+      .eq('id', user.id);
+
+  if (updateError) throw updateError;
+
+  return true;
+}
