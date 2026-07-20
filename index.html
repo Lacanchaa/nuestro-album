@@ -3,111 +3,54 @@
 <html lang="es" data-theme="rosa">
 
 <head>
-
   <meta charset="UTF-8">
-
-<meta
- name="viewport"
- content="width=device-width, initial-scale=1.0">
-
-<meta
- name="theme-color"
- content="#C1798A">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#C1798A">
 
   <title>Nuestro Álbum</title>
 
-  <!-- FAVICON -->
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
 
-  <link
-    rel="icon"
-    href="favicon.ico"
-    type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <!-- Fuentes -->
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/main.css">
 
-  <link
-    rel="preconnect"
-    href="https://fonts.googleapis.com">
-
-  <link
-    rel="preconnect"
-    href="https://fonts.gstatic.com"
-    crossorigin>
-
-  <!-- Estilos -->
-
-  <link
-    rel="stylesheet"
-    href="css/reset.css">
-
-  <link
-    rel="stylesheet"
-    href="css/themes.css">
-
-  <link
-    rel="stylesheet"
-    href="css/main.css">
-
-  <!-- Aplicar tema guardado -->
+  <!-- Tema inicial -->
 
   <script>
-
     (function () {
-
       try {
-
-        var raw =
-          localStorage.getItem(
-            "album_settings"
-          );
+        const raw = localStorage.getItem('album_settings');
 
         if (raw) {
+          const settings = JSON.parse(raw);
 
-          var settings =
-            JSON.parse(raw);
-
-          if (
-            settings &&
-            settings.theme
-          ) {
-
+          if (settings && settings.theme) {
             document.documentElement.setAttribute(
-              "data-theme",
+              'data-theme',
               settings.theme
             );
-
           }
-
         }
-
       } catch (error) {
-
-        console.warn(
-          "No se pudo cargar el tema guardado"
-        );
-
+        console.warn('No se pudo cargar el tema guardado');
       }
-
     })();
-
   </script>
 
 </head>
 
 <body>
 
-  <!-- ===================== PANTALLA DE CARGA ===================== -->
+  <!-- ===================== CARGA ===================== -->
 
-  <div
-    id="screen-loading"
-    class="screen screen-loading">
+  <div id="screen-loading" class="screen screen-loading">
+    <div class="thread-mark" aria-hidden="true"></div>
 
 ```
-<div
-  class="thread-mark"
-  aria-hidden="true">
-</div>
-
 <p data-i18n="loading">
   Preparando vuestros recuerdos…
 </p>
@@ -117,16 +60,12 @@
 
   <!-- ===================== AUTENTICACIÓN ===================== -->
 
-  <div
-    id="screen-auth"
-    class="screen screen-auth hidden">
+  <div id="screen-auth" class="screen screen-auth hidden">
 
 ```
 <div class="auth-card">
 
-  <div
-    class="auth-mark"
-    aria-hidden="true">
+  <div class="auth-mark" aria-hidden="true">
     ✦
   </div>
 
@@ -134,52 +73,39 @@
     class="auth-title"
     id="auth-welcome"
     data-i18n="welcomeTitle">
-
     Bienvenidos de nuevo
-
   </h1>
 
-  <p
-    class="auth-sub"
-    data-i18n="welcomeSub">
-
+  <p class="auth-sub" data-i18n="welcomeSub">
     Vuestra historia os espera
-
   </p>
+
 
   <!-- LOGIN -->
 
-  <form
-    id="form-login"
-    class="auth-form">
+  <form id="form-login" class="auth-form">
 
     <label class="field">
-
-      <span data-i18n="username">
-        Usuario
-      </span>
+      <span data-i18n="username">Usuario</span>
 
       <input
         type="text"
         id="login-username"
         autocomplete="username"
         required>
-
     </label>
 
-    <label class="field">
 
-      <span data-i18n="password">
-        Contraseña
-      </span>
+    <label class="field">
+      <span data-i18n="password">Contraseña</span>
 
       <input
         type="password"
         id="login-password"
         autocomplete="current-password"
         required>
-
     </label>
+
 
     <label class="checkbox-field">
 
@@ -194,19 +120,20 @@
 
     </label>
 
+
     <p
       class="auth-error"
       id="login-error">
     </p>
 
+
     <button
       type="submit"
       class="btn btn-primary"
       data-i18n="signIn">
-
       Entrar
-
     </button>
+
 
     <div class="auth-links">
 
@@ -215,9 +142,7 @@
         class="link-btn"
         data-goto="register"
         data-i18n="createAccount">
-
         Crear cuenta
-
       </button>
 
       <button
@@ -225,23 +150,19 @@
         class="link-btn"
         data-goto="recover"
         data-i18n="forgotPassword">
-
         Olvidé mi contraseña
-
       </button>
 
     </div>
 
   </form>
 
+
   <!-- REGISTRO -->
 
-  <form
-    id="form-register"
-    class="auth-form hidden">
+  <form id="form-register" class="auth-form hidden">
 
     <label class="field">
-
       <span data-i18n="displayName">
         Vuestro nombre / apodo
       </span>
@@ -251,11 +172,10 @@
         id="reg-displayname"
         required
         maxlength="60">
-
     </label>
 
-    <label class="field">
 
+    <label class="field">
       <span data-i18n="username">
         Usuario
       </span>
@@ -267,11 +187,10 @@
         required
         minlength="3"
         maxlength="30">
-
     </label>
 
-    <label class="field">
 
+    <label class="field">
       <span data-i18n="password">
         Contraseña
       </span>
@@ -282,11 +201,10 @@
         autocomplete="new-password"
         required
         minlength="6">
-
     </label>
 
-    <label class="field">
 
+    <label class="field">
       <span data-i18n="confirmPassword">
         Confirmar contraseña
       </span>
@@ -297,11 +215,10 @@
         autocomplete="new-password"
         required
         minlength="6">
-
     </label>
 
-    <label class="field">
 
+    <label class="field">
       <span data-i18n="securityQuestion">
         Pregunta de seguridad
       </span>
@@ -311,11 +228,10 @@
         id="reg-secquestion"
         required
         placeholder="¿Dónde fue vuestra primera cita?">
-
     </label>
 
-    <label class="field">
 
+    <label class="field">
       <span data-i18n="securityAnswer">
         Respuesta
       </span>
@@ -324,22 +240,22 @@
         type="text"
         id="reg-secanswer"
         required>
-
     </label>
+
 
     <p
       class="auth-error"
       id="register-error">
     </p>
 
+
     <button
       type="submit"
       class="btn btn-primary"
       data-i18n="createAccount">
-
       Crear cuenta
-
     </button>
+
 
     <div class="auth-links">
 
@@ -348,20 +264,17 @@
         class="link-btn"
         data-goto="login"
         data-i18n="backToLogin">
-
         Volver a entrar
-
       </button>
 
     </div>
 
   </form>
 
-  <!-- RECUPERAR -->
 
-  <form
-    id="form-recover"
-    class="auth-form hidden">
+  <!-- RECUPERACIÓN -->
+
+  <form id="form-recover" class="auth-form hidden">
 
     <label class="field">
 
@@ -376,18 +289,13 @@
 
     </label>
 
-    <div
-      id="rec-step2"
-      class="hidden">
+
+    <div id="rec-step2" class="hidden">
 
       <label class="field">
 
-        <span
-          id="rec-question-label"
-          data-i18n="securityQuestion">
-
+        <span id="rec-question-label">
           Pregunta de seguridad
-
         </span>
 
         <input
@@ -396,6 +304,7 @@
           required>
 
       </label>
+
 
       <label class="field">
 
@@ -412,35 +321,36 @@
 
     </div>
 
+
     <p
       class="auth-error"
       id="recover-error">
     </p>
+
 
     <p
       class="auth-ok"
       id="recover-ok">
     </p>
 
+
     <button
       type="button"
       id="rec-step1-btn"
       class="btn btn-primary"
       data-i18n="continueBtn">
-
       Continuar
-
     </button>
+
 
     <button
       type="button"
       id="rec-step2-btn"
       class="btn btn-primary hidden"
       data-i18n="resetPassword">
-
       Restablecer contraseña
-
     </button>
+
 
     <div class="auth-links">
 
@@ -449,9 +359,7 @@
         class="link-btn"
         data-goto="login"
         data-i18n="backToLogin">
-
         Volver a entrar
-
       </button>
 
     </div>
@@ -465,40 +373,25 @@
 
   <!-- ===================== BLOQUEO ===================== -->
 
-  <div
-    id="screen-lock"
-    class="screen screen-lock hidden">
+  <div id="screen-lock" class="screen screen-lock hidden">
 
 ```
 <div class="auth-card">
 
-  <div
-    class="auth-mark"
-    aria-hidden="true">
-
+  <div class="auth-mark" aria-hidden="true">
     🔒
-
   </div>
 
-  <h1
-    class="auth-title"
-    data-i18n="lockedTitle">
-
+  <h1 class="auth-title" data-i18n="lockedTitle">
     Sesión bloqueada
-
   </h1>
 
-  <p
-    class="auth-sub"
-    data-i18n="lockedSub">
-
+  <p class="auth-sub" data-i18n="lockedSub">
     Introduce tu contraseña para continuar
-
   </p>
 
-  <form
-    id="form-unlock"
-    class="auth-form">
+
+  <form id="form-unlock" class="auth-form">
 
     <label class="field">
 
@@ -514,18 +407,18 @@
 
     </label>
 
+
     <p
       class="auth-error"
       id="unlock-error">
     </p>
 
+
     <button
       type="submit"
       class="btn btn-primary"
       data-i18n="unlock">
-
       Desbloquear
-
     </button>
 
   </form>
@@ -535,16 +428,12 @@
 
   </div>
 
-  <!-- ===================== APP PRINCIPAL ===================== -->
+  <!-- ===================== APLICACIÓN ===================== -->
 
-  <div
-    id="screen-app"
-    class="screen screen-app hidden">
+  <div id="screen-app" class="screen screen-app hidden">
 
 ```
-<aside
-  class="sidebar"
-  id="sidebar">
+<aside class="sidebar" id="sidebar">
 
   <div class="brand">
 
@@ -555,24 +444,19 @@
     <span
       class="brand-name"
       id="brand-couple-name">
-
       Nuestro Álbum
-
     </span>
 
   </div>
 
-  <nav
-    class="nav"
-    id="main-nav">
+
+  <nav class="nav" id="main-nav">
 
     <button
       class="nav-item active"
       data-view="dashboard">
 
-      <span class="nav-ic">
-        ⌂
-      </span>
+      <span class="nav-ic">⌂</span>
 
       <span data-i18n="navDashboard">
         Inicio
@@ -580,13 +464,12 @@
 
     </button>
 
+
     <button
       class="nav-item"
       data-view="calendar">
 
-      <span class="nav-ic">
-        ▦
-      </span>
+      <span class="nav-ic">▦</span>
 
       <span data-i18n="navCalendar">
         Calendario
@@ -594,13 +477,12 @@
 
     </button>
 
+
     <button
       class="nav-item"
       data-view="timeline">
 
-      <span class="nav-ic">
-        〜
-      </span>
+      <span class="nav-ic">〜</span>
 
       <span data-i18n="navTimeline">
         Nuestra Historia
@@ -608,13 +490,12 @@
 
     </button>
 
+
     <button
       class="nav-item"
       data-view="events">
 
-      <span class="nav-ic">
-        ✧
-      </span>
+      <span class="nav-ic">✧</span>
 
       <span data-i18n="navEvents">
         Eventos
@@ -622,13 +503,12 @@
 
     </button>
 
+
     <button
       class="nav-item"
       data-view="notes">
 
-      <span class="nav-ic">
-        ✎
-      </span>
+      <span class="nav-ic">✎</span>
 
       <span data-i18n="navNotes">
         Notas
@@ -636,13 +516,12 @@
 
     </button>
 
+
     <button
       class="nav-item"
       data-view="gallery">
 
-      <span class="nav-ic">
-        ▣
-      </span>
+      <span class="nav-ic">▣</span>
 
       <span data-i18n="navGallery">
         Galería
@@ -650,13 +529,12 @@
 
     </button>
 
+
     <button
       class="nav-item"
       data-view="settings">
 
-      <span class="nav-ic">
-        ⚙
-      </span>
+      <span class="nav-ic">⚙</span>
 
       <span data-i18n="navSettings">
         Ajustes
@@ -666,27 +544,24 @@
 
   </nav>
 
-  <!-- IMPORTANTE: auth.js debe buscar #btn-logout -->
 
   <button
     class="btn btn-ghost logout-btn"
     id="btn-logout"
     data-i18n="signOut">
-
     Cerrar sesión
-
   </button>
 
 </aside>
+
 
 <div
   class="sidebar-backdrop"
   id="sidebar-backdrop">
 </div>
 
-<main
-  class="content"
-  id="content">
+
+<main class="content" id="content">
 
   <header class="topbar">
 
@@ -694,19 +569,17 @@
       class="hamburger"
       id="btn-hamburger"
       aria-label="Menú">
-
       ☰
-
     </button>
+
 
     <h2
       class="view-title"
       id="view-title"
       data-i18n="navDashboard">
-
       Inicio
-
     </h2>
+
 
     <div class="topbar-actions">
 
@@ -725,48 +598,54 @@
 
       </select>
 
+
       <button
         class="icon-btn"
         id="btn-anim-toggle"
         title="Animaciones">
-
         ✨
-
       </button>
 
     </div>
 
   </header>
 
+
   <section
     id="view-dashboard"
     class="view active">
   </section>
+
 
   <section
     id="view-calendar"
     class="view">
   </section>
 
+
   <section
     id="view-timeline"
     class="view">
   </section>
+
 
   <section
     id="view-events"
     class="view">
   </section>
 
+
   <section
     id="view-notes"
     class="view">
   </section>
 
+
   <section
     id="view-gallery"
     class="view">
   </section>
+
 
   <section
     id="view-settings"
@@ -788,10 +667,9 @@
 <button
   id="mp-toggle"
   class="mp-toggle">
-
   ▶
-
 </button>
+
 
 <div class="mp-info">
 
@@ -799,10 +677,9 @@
     id="mp-track-name"
     class="mp-track-name"
     data-i18n="noTrack">
-
     Sin música
-
   </span>
+
 
   <input
     id="mp-seek"
@@ -814,23 +691,22 @@
 
 </div>
 
+
 <button
   id="mp-shuffle"
   class="icon-btn small"
   title="Aleatorio">
-
   ⤨
-
 </button>
+
 
 <button
   id="mp-repeat"
   class="icon-btn small"
   title="Repetir">
-
   ↻
-
 </button>
+
 
 <input
   id="mp-volume"
@@ -841,23 +717,21 @@
   value="0.7"
   class="mp-volume">
 
+
 <button
   id="mp-list"
   class="icon-btn small"
   title="Playlist">
-
   ♫
-
 </button>
 
-<audio
-  id="mp-audio">
-</audio>
+
+<audio id="mp-audio"></audio>
 ```
 
   </div>
 
-  <!-- ===================== ANIMACIONES ===================== -->
+  <!-- ===================== EFECTOS ===================== -->
 
 <canvas
  id="fx-canvas"
@@ -865,41 +739,29 @@
 
   <!-- ===================== MODALES ===================== -->
 
-  <div
-    id="modal-root">
-  </div>
+  <div id="modal-root"></div>
 
   <!-- ===================== TOASTS ===================== -->
 
-  <div
-    id="toast-root"
-    class="toast-root">
-  </div>
+  <div id="toast-root" class="toast-root"></div>
 
-  <!-- ===================== SCRIPTS ===================== -->
+  <!-- ===================== SUPABASE ===================== -->
 
-  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-  </script>
+  <script src="./js/supabase-config.js"></script>
 
-  <!-- Configuración de Supabase -->
+  <!-- ===================== APLICACIÓN ===================== -->
 
-  <script
-    src="js/supabase-config.js">
-  </script>
-
-  <!-- JavaScript principal -->
+  <!--
+    IMPORTANTE:
+    app.js importa auth.js, music.js, data.js, etc.
+    Por eso NO debes cargar auth.js por separado.
+  -->
 
   <script
-    src="js/bundle.js">
-  </script>
-
-  <!-- Autenticación -->
-
-  <script
-    src="js/auth.js">
+    type="module"
+    src="./js/app.js">
   </script>
 
 </body>
