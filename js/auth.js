@@ -12,11 +12,12 @@
 
 
   // =====================================================
-  // FUNCIONES PARA HASH DE CONTRASEÑA
+  // HASH
   // =====================================================
 
   function generateSalt() {
     const array = new Uint8Array(16);
+
     crypto.getRandomValues(array);
 
     return Array.from(array)
@@ -25,13 +26,14 @@
   }
 
 
-  async function hashPassword(password, salt) {
+  async function hashValue(value, salt) {
+
     const encoder = new TextEncoder();
 
     const keyMaterial =
       await crypto.subtle.importKey(
         "raw",
-        encoder.encode(password),
+        encoder.encode(value),
         {
           name: "PBKDF2"
         },
@@ -39,17 +41,24 @@
         ["deriveBits"]
       );
 
+
     const hash =
       await crypto.subtle.deriveBits(
         {
           name: "PBKDF2",
+
           salt: encoder.encode(salt),
+
           iterations: 100000,
+
           hash: "SHA-256"
         },
+
         keyMaterial,
+
         256
       );
+
 
     return Array.from(new Uint8Array(hash))
       .map(byte => byte.toString(16).padStart(2, "0"))
@@ -57,20 +66,89 @@
   }
 
 
+  async function createPasswordHash(password) {
+
+    const salt =
+      generateSalt();
+
+    const hash =
+      await hashValue(
+        password,
+        salt
+      );
+
+
+    // Guardamos salt y hash juntos
+    return `${salt}:${hash}`;
+  }
+
+
+  async function verifyPassword(password, storedHash) {
+
+    const parts =
+      storedHash.split(":");
+
+
+    if (parts.length !== 2) {
+      return false;
+    }
+
+
+    const salt =
+      parts[0];
+
+    const originalHash =
+      parts[1];
+
+
+    const newHash =
+      await hashValue(
+        password,
+        salt
+      );
+
+
+    return newHash === originalHash;
+  }
+
+
   // =====================================================
-  // MOSTRAR / OCULTAR PANTALLAS
+  // HASH DE RESPUESTA DE SEGURIDAD
+  // =====================================================
+
+  async function createSecurityAnswerHash(answer) {
+
+    const salt =
+      generateSalt();
+
+    const hash =
+      await hashValue(
+        answer.toLowerCase().trim(),
+        salt
+      );
+
+
+    return `${salt}:${hash}`;
+  }
+
+
+  // =====================================================
+  // PANTALLAS
   // =====================================================
 
   function showApp() {
+
     const screenAuth =
       document.getElementById("screen-auth");
 
     const screenApp =
       document.getElementById("screen-app");
 
+
     if (screenAuth) {
       screenAuth.classList.add("hidden");
     }
+
 
     if (screenApp) {
       screenApp.classList.remove("hidden");
@@ -79,15 +157,18 @@
 
 
   function showAuth() {
+
     const screenAuth =
       document.getElementById("screen-auth");
 
     const screenApp =
       document.getElementById("screen-app");
 
+
     if (screenAuth) {
       screenAuth.classList.remove("hidden");
     }
+
 
     if (screenApp) {
       screenApp.classList.add("hidden");
@@ -102,21 +183,23 @@
   const registerForm =
     document.getElementById("form-register");
 
+
   if (registerForm) {
 
     registerForm.addEventListener(
       "submit",
+
       async function (event) {
 
         event.preventDefault();
 
-        console.log("Botón registro presionado");
 
         const displayName =
           document
             .getElementById("reg-displayname")
             ?.value
             .trim() || "";
+
 
         const username =
           document
@@ -125,38 +208,46 @@
             .trim()
             .toLowerCase() || "";
 
+
         const password =
           document
             .getElementById("reg-password")
             ?.value || "";
+
 
         const password2 =
           document
             .getElementById("reg-password2")
             ?.value || "";
 
-        const secQuestion =
+
+        const securityQuestion =
           document
             .getElementById("reg-secquestion")
             ?.value
             .trim() || "";
 
-        const secAnswer =
+
+        const securityAnswer =
           document
             .getElementById("reg-secanswer")
             ?.value
             .trim()
             .toLowerCase() || "";
 
+
         const errorElement =
-          document.getElementById("register-error");
+          document.getElementById(
+            "register-error"
+          );
 
 
-        // =========================
+        // -------------------------
         // VALIDACIONES
-        // =========================
+        // -------------------------
 
         if (username.length < 3) {
+
           errorElement.textContent =
             "El usuario debe tener al menos 3 caracteres";
 
@@ -165,6 +256,7 @@
 
 
         if (password.length < 6) {
+
           errorElement.textContent =
             "La contraseña debe tener al menos 6 caracteres";
 
@@ -173,6 +265,7 @@
 
 
         if (password !== password2) {
+
           errorElement.textContent =
             "Las contraseñas no coinciden";
 
@@ -180,7 +273,11 @@
         }
 
 
-        if (!secQuestion || !secAnswer) {
+        if (
+          !securityQuestion ||
+          !securityAnswer
+        ) {
+
           errorElement.textContent =
             "Completa la pregunta y respuesta de seguridad";
 
@@ -194,9 +291,9 @@
             "Creando cuenta...";
 
 
-          // =========================
-          // VERIFICAR USUARIO EXISTENTE
-          // =========================
+          // -------------------------
+          // COMPROBAR USUARIO
+          // -------------------------
 
           const {
             data: existingUser,
@@ -215,6 +312,7 @@
 
 
           if (existingUser) {
+
             errorElement.textContent =
               "Ese nombre de usuario ya está registrado";
 
@@ -222,23 +320,29 @@
           }
 
 
-          // =========================
-          // GENERAR HASH
-          // =========================
-
-          const salt =
-            generateSalt();
+          // -------------------------
+          // CREAR HASH DE CONTRASEÑA
+          // -------------------------
 
           const passwordHash =
-            await hashPassword(
-              password,
-              salt
+            await createPasswordHash(
+              password
             );
 
 
-          // =========================
-          // GUARDAR EN PROFILES
-          // =========================
+          // -------------------------
+          // CREAR HASH DE RESPUESTA
+          // -------------------------
+
+          const securityAnswerHash =
+            await createSecurityAnswerHash(
+              securityAnswer
+            );
+
+
+          // -------------------------
+          // INSERTAR USUARIO
+          // -------------------------
 
           const {
             data,
@@ -248,22 +352,29 @@
               .from("profiles")
               .insert({
 
-                username: username,
+                username:
 
-                password_hash:
-                  passwordHash,
+                  username,
 
-                password_salt:
-                  salt,
 
                 display_name:
+
                   displayName || username,
 
-                security_question:
-                  secQuestion,
 
-                security_answer:
-                  secAnswer
+                password_hash:
+
+                  passwordHash,
+
+
+                security_question:
+
+                  securityQuestion,
+
+
+                security_answer_hash:
+
+                  securityAnswerHash
 
               })
               .select()
@@ -276,17 +387,18 @@
 
 
           console.log(
-            "Usuario registrado correctamente:",
+            "Usuario registrado:",
             data
           );
 
 
-          // =========================
+          // -------------------------
           // GUARDAR SESIÓN
-          // =========================
+          // -------------------------
 
           localStorage.setItem(
             "loggedUser",
+
             JSON.stringify({
 
               id: data.id,
@@ -304,6 +416,7 @@
           errorElement.textContent =
             "";
 
+
           alert(
             "Cuenta creada correctamente"
           );
@@ -314,11 +427,13 @@
 
           showApp();
 
+        }
 
-        } catch (error) {
+
+        catch (error) {
 
           console.error(
-            "Error al registrar usuario:",
+            "Error al registrar:",
             error
           );
 
@@ -340,13 +455,17 @@
   // =====================================================
 
   const loginForm =
-    document.getElementById("form-login");
+    document.getElementById(
+      "form-login"
+    );
 
 
   if (loginForm) {
 
     loginForm.addEventListener(
+
       "submit",
+
       async function (event) {
 
         event.preventDefault();
@@ -354,7 +473,9 @@
 
         const username =
           document
-            .getElementById("login-username")
+            .getElementById(
+              "login-username"
+            )
             ?.value
             .trim()
             .toLowerCase() || "";
@@ -362,25 +483,24 @@
 
         const password =
           document
-            .getElementById("login-password")
+            .getElementById(
+              "login-password"
+            )
             ?.value || "";
 
 
         const errorElement =
-          document.getElementById("login-error");
+          document.getElementById(
+            "login-error"
+          );
 
 
         if (!username || !password) {
 
-          if (errorElement) {
-
-            errorElement.textContent =
-              "Introduce tu usuario y contraseña";
-
-          }
+          errorElement.textContent =
+            "Introduce tu usuario y contraseña";
 
           return;
-
         }
 
 
@@ -390,9 +510,9 @@
             "Iniciando sesión...";
 
 
-          // =========================
+          // -------------------------
           // BUSCAR USUARIO
-          // =========================
+          // -------------------------
 
           const {
             data: user,
@@ -400,8 +520,13 @@
           } =
             await supabaseClient
               .from("profiles")
-              .select("*")
-              .eq("username", username)
+              .select(
+                "id, username, display_name, password_hash"
+              )
+              .eq(
+                "username",
+                username
+              )
               .maybeSingle();
 
 
@@ -416,40 +541,38 @@
               "Usuario o contraseña incorrectos";
 
             return;
-
           }
 
 
-          // =========================
+          // -------------------------
           // COMPROBAR CONTRASEÑA
-          // =========================
+          // -------------------------
 
-          const passwordHash =
-            await hashPassword(
+          const passwordCorrect =
+            await verifyPassword(
               password,
-              user.password_salt
+
+              user.password_hash
             );
 
 
-          if (
-            passwordHash !==
-            user.password_hash
-          ) {
+          if (!passwordCorrect) {
 
             errorElement.textContent =
               "Usuario o contraseña incorrectos";
 
             return;
-
           }
 
 
-          // =========================
+          // -------------------------
           // GUARDAR SESIÓN
-          // =========================
+          // -------------------------
 
           localStorage.setItem(
+
             "loggedUser",
+
             JSON.stringify({
 
               id: user.id,
@@ -461,6 +584,7 @@
                 user.display_name
 
             })
+
           );
 
 
@@ -476,8 +600,10 @@
 
           showApp();
 
+        }
 
-        } catch (error) {
+
+        catch (error) {
 
           console.error(
             "Error al iniciar sesión:",
@@ -491,13 +617,14 @@
         }
 
       }
+
     );
 
   }
 
 
   // =====================================================
-  // MANTENER SESIÓN AL RECARGAR
+  // MANTENER SESIÓN
   // =====================================================
 
   const loggedUser =
@@ -511,10 +638,15 @@
     try {
 
       const user =
-        JSON.parse(loggedUser);
+        JSON.parse(
+          loggedUser
+        );
 
 
-      if (user && user.username) {
+      if (
+        user &&
+        user.username
+      ) {
 
         console.log(
           "Sesión restaurada:",
@@ -526,7 +658,9 @@
 
       }
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
       console.error(
         "Error al restaurar sesión:",
@@ -538,11 +672,14 @@
         "loggedUser"
       );
 
+
       showAuth();
 
     }
 
-  } else {
+  }
+
+  else {
 
     showAuth();
 
@@ -554,13 +691,17 @@
   // =====================================================
 
   const logoutButton =
-    document.getElementById("logout");
+    document.getElementById(
+      "logout"
+    );
 
 
   if (logoutButton) {
 
     logoutButton.addEventListener(
+
       "click",
+
       function () {
 
         localStorage.removeItem(
@@ -571,9 +712,9 @@
         showAuth();
 
       }
+
     );
 
   }
-
 
 })();
