@@ -616,9 +616,3 @@ Eso provoca errores de sintaxis. **Borra todo el contenido actual de `auth.js` y
   }
 
 })();
-:::
-
-**Importante:** al pegarlo en GitHub, no copies las líneas de apertura y cierre del bloque de escritura (`:::writing...` y `:::`). Copia solamente el código que empieza en:
-
-```javascript
-(function () { })();
