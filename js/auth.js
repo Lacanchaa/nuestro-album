@@ -249,7 +249,7 @@ error: insertError
 .insert({
 username: cleanUsername,
 
-```
+
   display_name:
     cleanDisplayName ||
     cleanUsername,
@@ -265,7 +265,6 @@ username: cleanUsername,
 })
 .select()
 .single();
-```
 
 if (insertError) {
 throw insertError;
