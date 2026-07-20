@@ -271,21 +271,35 @@
           }
 
           console.log(
-            "Usuario registrado correctamente:",
-            insertResult.data
-          );
+  "Usuario registrado correctamente:",
+  insertResult.data
+);
 
-          saveSession(insertResult.data);
+saveSession(insertResult.data);
 
-          registerForm.reset();
+// CREAR REGISTRO EN USER_STORAGE
+const storageResult = await supabaseClient
+  .from("user_storage")
+  .insert({
+    user_id: insertResult.data.id
+  });
 
-          errorElement.textContent = "";
+if (storageResult.error) {
+  console.error(
+    "Error creando user_storage:",
+    storageResult.error
+  );
+}
 
-          alert(
-            "Cuenta creada correctamente"
-          );
+registerForm.reset();
 
-          showApp();
+errorElement.textContent = "";
+
+alert(
+  "Cuenta creada correctamente"
+);
+
+showApp();
 
         } catch (error) {
           console.error(
