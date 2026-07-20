@@ -10,10 +10,6 @@ return;
 
 console.log("Supabase conectado correctamente");
 
-// =====================================================
-// FUNCIONES DE HASH
-// =====================================================
-
 function generateSalt() {
 const array = new Uint8Array(16);
 
@@ -56,9 +52,7 @@ const hash =
     256
   );
 
-return Array.from(
-  new Uint8Array(hash)
-)
+return Array.from(new Uint8Array(hash))
   .map(function (byte) {
     return byte.toString(16).padStart(2, "0");
   })
@@ -131,10 +125,6 @@ return salt + ":" + hash;
 
 }
 
-// =====================================================
-// SESIÓN
-// =====================================================
-
 function saveSession(user) {
 localStorage.setItem(
 "loggedUser",
@@ -184,10 +174,6 @@ catch (error) {
 
 }
 
-// =====================================================
-// MOSTRAR APLICACIÓN
-// =====================================================
-
 function showApp() {
 const screenAuth =
 document.getElementById(
@@ -215,10 +201,6 @@ if (screenApp) {
 
 }
 
-// =====================================================
-// MOSTRAR LOGIN
-// =====================================================
-
 function showAuth() {
 const screenAuth =
 document.getElementById(
@@ -245,10 +227,6 @@ if (screenApp) {
 ```
 
 }
-
-// =====================================================
-// REGISTRO
-// =====================================================
 
 const registerForm =
 document.getElementById(
@@ -457,10 +435,6 @@ event.preventDefault();
 
 }
 
-// =====================================================
-// LOGIN
-// =====================================================
-
 const loginForm =
 document.getElementById(
 "form-login"
@@ -589,10 +563,6 @@ event.preventDefault();
 
 }
 
-// =====================================================
-// RESTAURAR SESIÓN
-// =====================================================
-
 const loggedUser =
 getLoggedUser();
 
@@ -611,10 +581,6 @@ showApp();
 else {
 showAuth();
 }
-
-// =====================================================
-// CERRAR SESIÓN
-// =====================================================
 
 const logoutButton =
 document.getElementById(
