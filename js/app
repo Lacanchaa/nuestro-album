@@ -1,0 +1,287 @@
+// ============================================================
+// app.js — Orquestador principal de la aplicación
+// ============================================================
+import * as auth from './auth.js';
+import { getSettings, saveSettings } from './data.js';
+import { toast } from './ui.js';
+import { getLang, setLang, applyTranslations, t } from './i18n.js';
+import { applyTheme } from './theme.js';
+import { startFx, stopFx, isFxRunning } from './fx.js';
+import { initPlayer } from './music.js';
+
+import * as viewDashboard from './views/dashboard.js';
+import * as viewCalendar from './views/calendar.js';
+import * as viewTimeline from './views/timeline.js';
+import * as viewEvents from './views/events.js';
+import * as viewNotes from './views/notes.js';
+import * as viewGallery from './views/gallery.js';
+import * as viewSettings from './views/settings.js';
+
+const VIEWS = {
+  dashboard: viewDashboard,
+  calendar: viewCalendar,
+  timeline: viewTimeline,
+  events: viewEvents,
+  notes: viewNotes,
+  gallery: viewGallery,
+  settings: viewSettings
+};
+
+let activeView = null;
+let inactivityTimer = null;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+// ---------------- Bootstrap ----------------
+function boot() {
+  const settings = getSettings();
+  applyTheme(settings.theme);
+  setLang(settings.lang || getLang());
+
+  if (auth.isAuthenticated()) {
+    enterApp();
+  } else {
+    showScreen('screen-auth');
+    applyTranslations();
+  }
+
+  wireAuthForms();
+  wireUnlockForm();
+}
+
+// ---------------- Auth screen ----------------
+function wireAuthForms() {
+  document.querySelectorAll('[data-goto]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.goto;
+      ['login', 'register', 'recover'].forEach(name => {
+        document.getElementById(`form-${name}`).classList.toggle('hidden', name !== target);
+      });
+      clearAuthErrors();
+    });
+  });
+
+  document.getElementById('form-login').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+    const remember = document.getElementById('login-remember').checked;
+    try {
+      await auth.loginUser({ username, password, remember });
+      document.getElementById('login-error').textContent = '';
+      enterApp();
+    } catch (err) {
+      document.getElementById('login-error').textContent = err.message;
+    }
+  });
+
+  document.getElementById('form-register').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const displayName = document.getElementById('reg-displayname').value;
+    const username = document.getElementById('reg-username').value;
+    const password = document.getElementById('reg-password').value;
+    const password2 = document.getElementById('reg-password2').value;
+    const secQuestion = document.getElementById('reg-secquestion').value;
+    const secAnswer = document.getElementById('reg-secanswer').value;
+    const errEl = document.getElementById('register-error');
+    if (password !== password2) {
+      errEl.textContent = getLang() === 'en' ? 'Passwords do not match' : 'Las contraseñas no coinciden';
+      return;
+    }
+    try {
+      await auth.registerUser({ username, password, displayName, secQuestion, secAnswer });
+      await auth.loginUser({ username, password, remember: true });
+      errEl.textContent = '';
+      toast(getLang() === 'en' ? 'Account created' : 'Cuenta creada', 'success');
+      enterApp();
+    } catch (err) {
+      errEl.textContent = err.message;
+    }
+  });
+
+  const rec1 = document.getElementById('rec-step1-btn');
+  const rec2 = document.getElementById('rec-step2-btn');
+  rec1.addEventListener('click', () => {
+    const username = document.getElementById('rec-username').value;
+    const errEl = document.getElementById('recover-error');
+    try {
+      const q = auth.getSecurityQuestion(username);
+      document.getElementById('rec-question-label').textContent = q;
+      document.getElementById('rec-step2').classList.remove('hidden');
+      rec1.classList.add('hidden');
+      rec2.classList.remove('hidden');
+      errEl.textContent = '';
+    } catch (err) {
+      errEl.textContent = err.message;
+    }
+  });
+  rec2.addEventListener('click', async () => {
+    const username = document.getElementById('rec-username').value;
+    const answer = document.getElementById('rec-answer').value;
+    const newPassword = document.getElementById('rec-newpass').value;
+    const errEl = document.getElementById('recover-error');
+    const okEl = document.getElementById('recover-ok');
+    try {
+      await auth.recoverPassword({ username, answer, newPassword });
+      errEl.textContent = '';
+      okEl.textContent = getLang() === 'en' ? 'Password updated. You can sign in now.' : 'Contraseña actualizada. Ya puedes entrar.';
+      setTimeout(() => {
+        document.querySelector('[data-goto="login"]').click();
+        okEl.textContent = '';
+      }, 1600);
+    } catch (err) {
+      errEl.textContent = err.message;
+    }
+  });
+}
+
+function clearAuthErrors() {
+  ['login-error', 'register-error', 'recover-error', 'recover-ok'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '';
+  });
+}
+
+// ---------------- Lock screen ----------------
+function wireUnlockForm() {
+  document.getElementById('form-unlock').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const user = auth.getCurrentUser();
+    const password = document.getElementById('unlock-password').value;
+    const errEl = document.getElementById('unlock-error');
+    if (!user) { showScreen('screen-auth'); return; }
+    try {
+      await auth.loginUser({ username: user.username, password, remember: true });
+      errEl.textContent = '';
+      document.getElementById('unlock-password').value = '';
+      showScreen('screen-app');
+      resetInactivityTimer();
+    } catch (err) {
+      errEl.textContent = err.message;
+    }
+  });
+}
+
+function resetInactivityTimer() {
+  if (inactivityTimer) clearTimeout(inactivityTimer);
+  const minutes = getSettings().inactivityLockMinutes;
+  if (!minutes || minutes <= 0) return;
+  inactivityTimer = setTimeout(() => {
+    showScreen('screen-lock');
+    applyTranslations();
+  }, minutes * 60 * 1000);
+}
+
+function wireInactivityWatchers() {
+  ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, () => {
+      if (!document.getElementById('screen-app').classList.contains('hidden')) resetInactivityTimer();
+    }, { passive: true });
+  });
+  window.addEventListener('lockminutes-changed', resetInactivityTimer);
+}
+
+// ---------------- Main app shell ----------------
+function enterApp() {
+  const user = auth.getCurrentUser();
+  const settings = getSettings();
+  document.getElementById('brand-couple-name').textContent = settings.coupleName || 'Nuestro Álbum';
+  document.getElementById('auth-welcome').textContent = user ? `${t('welcomeTitle')}, ${user.displayName}` : t('welcomeTitle');
+
+  showScreen('screen-app');
+  applyTranslations();
+  wireNav();
+  wireTopbar();
+  initPlayer();
+  resetInactivityTimer();
+  wireInactivityWatchers();
+  navigateTo('dashboard');
+}
+
+function wireNav() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('show');
+  }
+
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigateTo(btn.dataset.view);
+      closeSidebar();
+    });
+  });
+
+  if (backdrop) backdrop.addEventListener('click', closeSidebar);
+  document.getElementById('btn-logout').addEventListener('click', () => {
+    if (activeView && VIEWS[activeView].destroy) VIEWS[activeView].destroy();
+    auth.logoutUser();
+    showScreen('screen-auth');
+    document.querySelector('[data-goto="login"]')?.click();
+    applyTranslations();
+  });
+}
+
+function wireTopbar() {
+  const langSelect = document.getElementById('lang-switch');
+  langSelect.value = getLang();
+  langSelect.addEventListener('change', () => {
+    setLang(langSelect.value);
+    saveSettings({ lang: langSelect.value });
+    navigateTo(activeView, true);
+    applyTranslations();
+  });
+
+  document.getElementById('btn-hamburger').addEventListener('click', () => {
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    const willOpen = !sidebar.classList.contains('open');
+    sidebar.classList.toggle('open', willOpen);
+    if (backdrop) backdrop.classList.toggle('show', willOpen);
+  });
+
+  const animBtn = document.getElementById('btn-anim-toggle');
+  const settings = getSettings();
+  if (settings.animations) startFx(settings.template);
+  animBtn.addEventListener('click', () => {
+    if (isFxRunning()) { stopFx(); saveSettings({ animations: false }); }
+    else { startFx(getSettings().template); saveSettings({ animations: true }); }
+  });
+
+  window.addEventListener('langchange', () => {
+    document.getElementById('view-title').textContent = t(navKeyFor(activeView));
+  });
+}
+
+function navKeyFor(view) {
+  return { dashboard: 'navDashboard', calendar: 'navCalendar', timeline: 'navTimeline', events: 'navEvents', notes: 'navNotes', gallery: 'navGallery', settings: 'navSettings' }[view] || 'navDashboard';
+}
+
+function navigateTo(view, silent = false) {
+  if (!VIEWS[view]) view = 'dashboard';
+  if (activeView && VIEWS[activeView].destroy) VIEWS[activeView].destroy();
+
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const section = document.getElementById(`view-${view}`);
+  section.classList.add('active');
+  document.getElementById('view-title').textContent = t(navKeyFor(view));
+
+  activeView = view;
+  VIEWS[view].init(section);
+
+  if (!silent) window.scrollTo({ top: 0 });
+}
+
+// ---------------- Loading screen then boot ----------------
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    document.getElementById('screen-loading').classList.add('hidden');
+    boot();
+  }, 350);
+});
